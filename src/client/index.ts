@@ -470,9 +470,10 @@ export class RemnawaveClient {
         return this.post(REST_API.HWID.CREATE_USER_HWID_DEVICE, params);
     }
 
-    async deleteHwidDevice(deviceUuid: string) {
+    async deleteHwidDevice(userUuid: string, hwid: string) {
         return this.post(REST_API.HWID.DELETE_USER_HWID_DEVICE, {
-            uuid: deviceUuid,
+            userUuid,
+            hwid,
         });
     }
 

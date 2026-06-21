@@ -89,11 +89,12 @@ export function registerHwidTools(
         'hwid_device_delete',
         'Delete a specific HWID device',
         {
-            deviceUuid: z.string().describe('HWID device UUID to delete'),
+            userUuid: z.string().describe('User UUID'),
+            hwid: z.string().describe('HWID of the device to delete'),
         },
-        async ({ deviceUuid }) => {
+        async ({ userUuid, hwid }) => {
             try {
-                const result = await client.deleteHwidDevice(deviceUuid);
+                const result = await client.deleteHwidDevice(userUuid, hwid);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
