@@ -30,9 +30,26 @@ export function registerIpControlTools(server: McpServer, client: RemnawaveClien
 
     if (readonly) return;
 
-    server.tool('ip_control_drop_connections', 'Drop active connections for specified IPs', {
-        ips: z.array(z.string()).describe('Array of IPs to drop connections for'),
-        nodeUuid: z.string().describe('Node UUID'),
+    server.tool('ip_control_drop_connections', 'Drop active connections by IP or user UUID on specific/all nodes', {
+        dropBy: z.union([
+            z.object({
+                by: z.literal('ipAddresses'),
+                ipAddresses: z.array(z.string()).min(1).describe('Array of IP addresses'),
+            }),
+            z.object({
+                by: z.literal('userUuids'),
+                userUuids: z.array(z.string()).min(1).describe('Array of user UUIDs'),
+            }),
+        ]).describe('What to drop connections by'),
+        targetNodes: z.union([
+            z.object({
+                target: z.literal('allNodes'),
+            }),
+            z.object({
+                target: z.literal('specificNodes'),
+                nodeUuids: z.array(z.string()).min(1).describe('Array of node UUIDs'),
+            }),
+        ]).describe('Which nodes to target'),
     }, async (params) => {
         try { return toolResult(await client.dropConnections(params)); } catch (e) { return toolError(e); }
     });

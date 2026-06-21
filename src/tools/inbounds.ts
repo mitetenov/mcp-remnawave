@@ -91,6 +91,7 @@ export function registerInboundTools(
         'Create a new config profile',
         {
             name: z.string().describe('Profile name'),
+            config: z.record(z.unknown()).describe('Config profile configuration object'),
         },
         async (params) => {
             try {
@@ -139,7 +140,10 @@ export function registerInboundTools(
         'config_profiles_reorder',
         'Reorder config profiles',
         {
-            uuids: z.array(z.string()).describe('Ordered array of profile UUIDs'),
+            items: z.array(z.object({
+                viewPosition: z.number().describe('Sort position (0-based)'),
+                uuid: z.string().describe('Config profile UUID'),
+            })).describe('Ordered array of { viewPosition, uuid } objects'),
         },
         async (params) => {
             try {

@@ -230,8 +230,8 @@ export class RemnawaveClient {
         return this.post(REST_API.NODES.ACTIONS.RESET_TRAFFIC(uuid));
     }
 
-    async reorderNodes(uuids: string[]) {
-        return this.post(REST_API.NODES.ACTIONS.REORDER, uuids);
+    async reorderNodes(nodes: Array<{ viewPosition: number; uuid: string }>) {
+        return this.post(REST_API.NODES.ACTIONS.REORDER, { nodes });
     }
 
     async bulkNodeProfileModification(params: Record<string, unknown>) {

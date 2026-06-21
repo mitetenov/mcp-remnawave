@@ -90,6 +90,10 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 .boolean()
                 .optional()
                 .describe('Create in disabled state'),
+            isHidden: z
+                .boolean()
+                .optional()
+                .describe('Hide from subscription list'),
             securityLayer: z
                 .enum(['DEFAULT', 'TLS', 'NONE'])
                 .optional()
@@ -107,6 +111,38 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 .array(z.enum(SUBSCRIPTION_TYPES))
                 .optional()
                 .describe('Subscription types to exclude this host from'),
+            xrayJsonTemplateUuid: z
+                .string()
+                .optional()
+                .describe('Xray JSON template UUID'),
+            excludedInternalSquads: z
+                .array(z.string())
+                .optional()
+                .describe('Internal squad UUIDs to exclude host from'),
+            overrideSniFromAddress: z
+                .boolean()
+                .optional()
+                .describe('Override SNI from address'),
+            keepSniBlank: z
+                .boolean()
+                .optional()
+                .describe('Keep SNI field blank'),
+            allowInsecure: z
+                .boolean()
+                .optional()
+                .describe('Allow insecure connections'),
+            vlessRouteId: z
+                .number()
+                .optional()
+                .describe('VLESS route ID (0-65535)'),
+            shuffleHost: z
+                .boolean()
+                .optional()
+                .describe('Enable host shuffling'),
+            mihomoX25519: z
+                .boolean()
+                .optional()
+                .describe('Enable Mihomo X25519'),
         },
         async (params) => {
             try {
@@ -128,6 +164,8 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                     body.fingerprint = params.fingerprint;
                 if (params.isDisabled !== undefined)
                     body.isDisabled = params.isDisabled;
+                if (params.isHidden !== undefined)
+                    body.isHidden = params.isHidden;
                 if (params.securityLayer !== undefined)
                     body.securityLayer = params.securityLayer;
                 if (params.tag !== undefined) body.tag = params.tag;
@@ -136,6 +174,22 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 if (params.nodes !== undefined) body.nodes = params.nodes;
                 if (params.excludeFromSubscriptionTypes !== undefined)
                     body.excludeFromSubscriptionTypes = params.excludeFromSubscriptionTypes;
+                if (params.xrayJsonTemplateUuid !== undefined)
+                    body.xrayJsonTemplateUuid = params.xrayJsonTemplateUuid;
+                if (params.excludedInternalSquads !== undefined)
+                    body.excludedInternalSquads = params.excludedInternalSquads;
+                if (params.overrideSniFromAddress !== undefined)
+                    body.overrideSniFromAddress = params.overrideSniFromAddress;
+                if (params.keepSniBlank !== undefined)
+                    body.keepSniBlank = params.keepSniBlank;
+                if (params.allowInsecure !== undefined)
+                    body.allowInsecure = params.allowInsecure;
+                if (params.vlessRouteId !== undefined)
+                    body.vlessRouteId = params.vlessRouteId;
+                if (params.shuffleHost !== undefined)
+                    body.shuffleHost = params.shuffleHost;
+                if (params.mihomoX25519 !== undefined)
+                    body.mihomoX25519 = params.mihomoX25519;
 
                 const result = await client.createHost(body);
                 return toolResult(result);
@@ -153,6 +207,8 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
             remark: z.string().optional().describe('New remark/name'),
             address: z.string().optional().describe('New address'),
             port: z.number().optional().describe('New port'),
+            configProfileUuid: z.string().optional().describe('New config profile UUID'),
+            configProfileInboundUuid: z.string().optional().describe('New config profile inbound UUID'),
             path: z.string().optional().describe('New URL path'),
             sni: z.string().optional().describe('New SNI'),
             host: z.string().optional().describe('New host header'),
@@ -178,6 +234,10 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 .boolean()
                 .optional()
                 .describe('Enable/disable host'),
+            isHidden: z
+                .boolean()
+                .optional()
+                .describe('Hide from subscription list'),
             securityLayer: z
                 .enum(['DEFAULT', 'TLS', 'NONE'])
                 .optional()
@@ -187,14 +247,58 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 .string()
                 .optional()
                 .describe('New server description'),
+            nodes: z
+                .array(z.string())
+                .optional()
+                .describe('New node UUIDs'),
             excludeFromSubscriptionTypes: z
                 .array(z.enum(SUBSCRIPTION_TYPES))
                 .optional()
                 .describe('Subscription types to exclude this host from'),
+            xrayJsonTemplateUuid: z
+                .string()
+                .optional()
+                .describe('Xray JSON template UUID'),
+            excludedInternalSquads: z
+                .array(z.string())
+                .optional()
+                .describe('Internal squad UUIDs to exclude host from'),
+            overrideSniFromAddress: z
+                .boolean()
+                .optional()
+                .describe('Override SNI from address'),
+            keepSniBlank: z
+                .boolean()
+                .optional()
+                .describe('Keep SNI field blank'),
+            allowInsecure: z
+                .boolean()
+                .optional()
+                .describe('Allow insecure connections'),
+            vlessRouteId: z
+                .number()
+                .optional()
+                .describe('VLESS route ID (0-65535)'),
+            shuffleHost: z
+                .boolean()
+                .optional()
+                .describe('Enable host shuffling'),
+            mihomoX25519: z
+                .boolean()
+                .optional()
+                .describe('Enable Mihomo X25519'),
         },
         async (params) => {
             try {
-                const result = await client.updateHost(params);
+                const { uuid, configProfileUuid, configProfileInboundUuid, ...fields } = params;
+                const body: Record<string, unknown> = { uuid, ...fields };
+                if (configProfileUuid !== undefined || configProfileInboundUuid !== undefined) {
+                    body.inbound = {
+                        ...(configProfileUuid !== undefined ? { configProfileUuid } : {}),
+                        ...(configProfileInboundUuid !== undefined ? { configProfileInboundUuid } : {}),
+                    };
+                }
+                const result = await client.updateHost(body);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);

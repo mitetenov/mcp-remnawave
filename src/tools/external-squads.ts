@@ -50,7 +50,10 @@ export function registerExternalSquadTools(server: McpServer, client: RemnawaveC
     });
 
     server.tool('external_squads_reorder', 'Reorder external squads', {
-        uuids: z.array(z.string()).describe('Ordered array of squad UUIDs'),
+        items: z.array(z.object({
+            viewPosition: z.number().describe('Sort position (0-based)'),
+            uuid: z.string().describe('Squad UUID'),
+        })).describe('Ordered array of { viewPosition, uuid } objects'),
     }, async (params) => {
         try { return toolResult(await client.reorderExternalSquads(params)); } catch (e) { return toolError(e); }
     });

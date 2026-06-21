@@ -12,7 +12,6 @@ export function registerApiTokenTools(server: McpServer, client: RemnawaveClient
 
     server.tool('api_tokens_create', 'Create a new API token', {
         tokenName: z.string().describe('Token name'),
-        tokenDescription: z.string().optional().describe('Token description'),
     }, async (params) => {
         try { return toolResult(await client.createApiToken(params)); } catch (e) { return toolError(e); }
     });

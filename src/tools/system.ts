@@ -137,7 +137,7 @@ export function registerSystemTools(
         'system_srr_matcher',
         'Test subscription request routing rules',
         {
-            input: z.string().describe('Input string to test against SRR rules'),
+            responseRules: z.record(z.unknown()).describe('Response rules configuration object with version and rules array'),
         },
         async (params) => {
             try {

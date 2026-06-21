@@ -36,13 +36,16 @@ export function registerSubPageConfigTools(server: McpServer, client: RemnawaveC
     });
 
     server.tool('sub_page_configs_reorder', 'Reorder subscription page configurations', {
-        uuids: z.array(z.string()).describe('Ordered array of config UUIDs'),
+        items: z.array(z.object({
+            viewPosition: z.number().describe('Sort position (0-based)'),
+            uuid: z.string().describe('Config UUID'),
+        })).describe('Ordered array of { viewPosition, uuid } objects'),
     }, async (params) => {
         try { return toolResult(await client.reorderSubscriptionPageConfigs(params)); } catch (e) { return toolError(e); }
     });
 
     server.tool('sub_page_configs_clone', 'Clone a subscription page configuration', {
-        uuid: z.string().describe('Config UUID to clone'),
+        cloneFromUuid: z.string().describe('Config UUID to clone'),
     }, async (params) => {
         try { return toolResult(await client.cloneSubscriptionPageConfig(params)); } catch (e) { return toolError(e); }
     });

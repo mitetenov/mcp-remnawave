@@ -74,6 +74,10 @@ export function registerHwidTools(
         {
             userUuid: z.string().describe('User UUID'),
             hwid: z.string().describe('Hardware ID'),
+            platform: z.string().optional().describe('Device platform'),
+            osVersion: z.string().optional().describe('OS version'),
+            deviceModel: z.string().optional().describe('Device model'),
+            userAgent: z.string().optional().describe('User agent string'),
         },
         async (params) => {
             try {

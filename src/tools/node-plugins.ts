@@ -44,19 +44,46 @@ export function registerNodePluginTools(server: McpServer, client: RemnawaveClie
     });
 
     server.tool('node_plugins_reorder', 'Reorder node plugins', {
-        uuids: z.array(z.string()).describe('Ordered array of plugin UUIDs'),
+        items: z.array(z.object({
+            viewPosition: z.number().describe('Sort position (0-based)'),
+            uuid: z.string().describe('Plugin UUID'),
+        })).describe('Ordered array of { viewPosition, uuid } objects'),
     }, async (params) => {
         try { return toolResult(await client.reorderNodePlugins(params)); } catch (e) { return toolError(e); }
     });
 
     server.tool('node_plugins_clone', 'Clone a node plugin', {
-        uuid: z.string().describe('Plugin UUID to clone'),
+        cloneFromUuid: z.string().describe('Plugin UUID to clone'),
     }, async (params) => {
         try { return toolResult(await client.cloneNodePlugin(params)); } catch (e) { return toolError(e); }
     });
 
-    server.tool('node_plugins_execute', 'Execute a node plugin', {
-        uuid: z.string().describe('Plugin UUID to execute'),
+    server.tool('node_plugins_execute', 'Execute a node plugin with a command on target nodes', {
+        command: z.union([
+            z.object({
+                command: z.literal('blockIps'),
+                ips: z.array(z.object({
+                    ip: z.string().describe('IP address to block'),
+                    timeout: z.number().describe('Block timeout in seconds'),
+                })).min(1).describe('Array of IP addresses with timeouts'),
+            }),
+            z.object({
+                command: z.literal('unblockIps'),
+                ips: z.array(z.string()).min(1).describe('Array of IP addresses to unblock'),
+            }),
+            z.object({
+                command: z.literal('recreateTables'),
+            }),
+        ]).describe('Command to execute'),
+        targetNodes: z.union([
+            z.object({
+                target: z.literal('allNodes'),
+            }),
+            z.object({
+                target: z.literal('specificNodes'),
+                nodeUuids: z.array(z.string()).min(1).describe('Array of node UUIDs'),
+            }),
+        ]).describe('Which nodes to target'),
     }, async (params) => {
         try { return toolResult(await client.executeNodePlugin(params)); } catch (e) { return toolError(e); }
     });

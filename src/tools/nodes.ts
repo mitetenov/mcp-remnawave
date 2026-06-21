@@ -261,15 +261,18 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
 
     server.tool(
         'nodes_reorder',
-        'Reorder nodes by providing an ordered array of UUIDs',
+        'Reorder nodes by providing an ordered array of node positions',
         {
-            uuids: z
-                .array(z.string())
-                .describe('Ordered array of node UUIDs'),
+            nodes: z
+                .array(z.object({
+                    viewPosition: z.number().describe('Sort position (0-based)'),
+                    uuid: z.string().describe('Node UUID'),
+                }))
+                .describe('Ordered array of { viewPosition, uuid } objects'),
         },
-        async ({ uuids }) => {
+        async ({ nodes }) => {
             try {
-                const result = await client.reorderNodes(uuids);
+                const result = await client.reorderNodes(nodes);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -281,12 +284,20 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
         'nodes_bulk_profile_modification',
         'Bulk modify config profile for selected nodes',
         {
-            nodeUuids: z.array(z.string()).describe('Array of node UUIDs'),
+            uuids: z.array(z.string()).describe('Array of node UUIDs'),
             configProfileUuid: z.string().describe('New config profile UUID'),
+            activeInbounds: z.array(z.string()).describe('Array of inbound UUIDs to enable'),
         },
         async (params) => {
             try {
-                const result = await client.bulkNodeProfileModification(params);
+                const body = {
+                    uuids: params.uuids,
+                    configProfile: {
+                        activeConfigProfileUuid: params.configProfileUuid,
+                        activeInbounds: params.activeInbounds,
+                    },
+                };
+                const result = await client.bulkNodeProfileModification(body);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -296,10 +307,10 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
 
     server.tool(
         'nodes_bulk_actions',
-        'Bulk actions on selected nodes (enable/disable/restart)',
+        'Bulk actions on selected nodes (enable/disable/restart/reset traffic)',
         {
-            nodeUuids: z.array(z.string()).describe('Array of node UUIDs'),
-            action: z.enum(['enable', 'disable', 'restart']).describe('Action to perform'),
+            uuids: z.array(z.string()).describe('Array of node UUIDs'),
+            action: z.enum(['ENABLE', 'DISABLE', 'RESTART', 'RESET_TRAFFIC']).describe('Action to perform'),
         },
         async (params) => {
             try {
@@ -315,13 +326,17 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
         'nodes_bulk_update',
         'Bulk update properties for selected nodes',
         {
-            nodeUuids: z.array(z.string()).describe('Array of node UUIDs'),
+            uuids: z.array(z.string()).describe('Array of node UUIDs'),
             countryCode: z.string().optional().describe('New country code'),
             consumptionMultiplier: z.number().optional().describe('New consumption multiplier'),
+            providerUuid: z.string().optional().describe('Infra provider UUID'),
+            tags: z.array(z.string()).optional().describe('Node tags'),
+            activePluginUuid: z.string().optional().describe('Active plugin UUID'),
         },
         async (params) => {
             try {
-                const result = await client.bulkUpdateNodes(params);
+                const { uuids, ...fields } = params;
+                const result = await client.bulkUpdateNodes({ uuids, fields });
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);

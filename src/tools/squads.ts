@@ -45,6 +45,7 @@ export function registerSquadTools(
         'Create a new internal squad',
         {
             name: z.string().describe('Squad name'),
+            inbounds: z.array(z.string()).describe('Array of inbound UUIDs'),
         },
         async (params) => {
             try {
