@@ -1,0 +1,65 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Determine version
+        id: version
+        run: |
+          # Try to get version from package.json
+          VERSION=$(node -p "try { require('./package.json').version } catch(e) { '' }")
+          if [ -n "$VERSION" ] && [ "$VERSION" != "undefined" ]; then
+            echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+            echo "release_name=v${VERSION}" >> "$GITHUB_OUTPUT"
+          else
+            # Fallback: use timestamp-based tag
+            TAG="build-$(date +'%Y%m%d-%H%M%S')"
+            echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+            echo "release_name=${TAG}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create release archive
+        run: |
+          if [ -d "dist" ]; then
+            cd dist && zip -r ../mcp-release.zip .
+          else
+            echo "ERROR: dist directory not found. Build may have failed."
+            exit 1
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.release_name }}
+          body: |
+            Automated release from commit ${{ github.sha }}
+
+            ## Changes
+            ${{ github.event.head_commit.message }}
+          files: mcp-release.zip
+          generate_release_notes: true
