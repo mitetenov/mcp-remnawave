@@ -1,12 +1,94 @@
 import { REST_API } from '@remnawave/backend-contract';
-import { Config } from '../config.js';
+import type {
+    CreateUserCommand,
+    UpdateUserCommand,
+    DeleteUserCommand,
+    ResolveUserCommand,
+    EnableUserCommand,
+    DisableUserCommand,
+    ResetUserTrafficCommand,
+    RevokeUserSubscriptionCommand,
+    BulkDeleteUsersByStatusCommand,
+    BulkUpdateUsersCommand,
+    BulkResetTrafficUsersCommand,
+    BulkRevokeUsersSubscriptionCommand,
+    BulkDeleteUsersCommand,
+    BulkUpdateUsersSquadsCommand,
+    BulkExtendExpirationDateCommand,
+    BulkAllUpdateUsersCommand,
+    BulkAllResetTrafficUsersCommand,
+    BulkAllExtendExpirationDateCommand,
+    CreateNodeCommand,
+    UpdateNodeCommand,
+    DeleteNodeCommand,
+    EnableNodeCommand,
+    DisableNodeCommand,
+    RestartNodeCommand,
+    RestartAllNodesCommand,
+    ResetNodeTrafficCommand,
+    ReorderNodeCommand,
+    BulkNodesProfileModificationCommand,
+    BulkNodesActionsCommand,
+    BulkNodesUpdateCommand,
+    CreateHostCommand,
+    UpdateHostCommand,
+    DeleteHostCommand,
+    BulkEnableHostsCommand,
+    BulkDisableHostsCommand,
+    BulkDeleteHostsCommand,
+    UpdateManyHostsCommand,
+    CreateConfigProfileCommand,
+    UpdateConfigProfileCommand,
+    DeleteConfigProfileCommand,
+    ReorderConfigProfileCommand,
+    CreateInternalSquadCommand,
+    UpdateInternalSquadCommand,
+    DeleteInternalSquadCommand,
+    CreateUserHwidDeviceCommand,
+    DeleteUserHwidDeviceCommand,
+    DeleteAllUserHwidDevicesCommand,
+    CreateInfraBillingHistoryRecordCommand,
+    CreateInfraBillingNodeCommand,
+    CreateInfraProviderCommand,
+    UpdateInfraBillingNodeCommand,
+    UpdateInfraProviderCommand,
+    DeleteInfraBillingNodeByUuidCommand,
+    DeleteInfraBillingHistoryRecordCommand,
+    DeleteInfraProviderByUuidCommand,
+    CreateSnippetCommand,
+    UpdateSnippetCommand,
+    DeleteSnippetCommand,
+    CreateExternalSquadCommand,
+    UpdateExternalSquadCommand,
+    DeleteExternalSquadCommand,
+    ReorderExternalSquadCommand,
+    UpdateRemnawaveSettingsCommand,
+    CreateSubscriptionPageConfigCommand,
+    UpdateSubscriptionPageConfigCommand,
+    DeleteSubscriptionPageConfigCommand,
+    CloneSubscriptionPageConfigCommand,
+    ReorderSubscriptionPageConfigsCommand,
+    CreateNodePluginCommand,
+    UpdateNodePluginCommand,
+    DeleteNodePluginCommand,
+    ReorderNodePluginCommand,
+    CloneNodePluginCommand,
+    PluginExecutorCommand,
+    CreateApiTokenCommand,
+    DeleteApiTokenCommand,
+    DropConnectionsCommand,
+    TestSrrMatcherCommand,
+} from '@remnawave/backend-contract';
+import { Config, isConfigured } from '../config.js';
 
 export class RemnawaveClient {
     private baseUrl: string;
     private headers: Record<string, string>;
+    private configured: boolean;
 
     constructor(config: Config) {
         this.baseUrl = config.baseUrl;
+        this.configured = isConfigured(config);
         this.headers = {
             Authorization: `Bearer ${config.apiToken}`,
             'Content-Type': 'application/json',
@@ -21,6 +103,11 @@ export class RemnawaveClient {
         path: string,
         body?: unknown,
     ): Promise<T> {
+        if (!this.configured) {
+            throw new Error(
+                'MCP server is not configured. Set REMNAWAVE_BASE_URL and REMNAWAVE_API_TOKEN environment variables.',
+            );
+        }
         const url = `${this.baseUrl}${path}`;
         const options: RequestInit = {
             method,
@@ -112,76 +199,76 @@ export class RemnawaveClient {
         return this.get(REST_API.USERS.TAGS.GET);
     }
 
-    async resolveUsers(params: Record<string, unknown>) {
-        return this.post(REST_API.USERS.RESOLVE, params);
+    async resolveUsers(params: ResolveUserCommand.Request) {
+        return this.post<ResolveUserCommand.Response>(REST_API.USERS.RESOLVE, params);
     }
 
-    async createUser(params: Record<string, unknown>) {
-        return this.post(REST_API.USERS.CREATE, params);
+    async createUser(params: CreateUserCommand.Request) {
+        return this.post<CreateUserCommand.Response>(REST_API.USERS.CREATE, params);
     }
 
-    async updateUser(params: Record<string, unknown>) {
-        return this.patch(REST_API.USERS.UPDATE, params);
+    async updateUser(params: UpdateUserCommand.Request) {
+        return this.patch<UpdateUserCommand.Response>(REST_API.USERS.UPDATE, params);
     }
 
     async deleteUser(uuid: string) {
-        return this.delete(REST_API.USERS.DELETE(uuid));
+        return this.delete<DeleteUserCommand.Response>(REST_API.USERS.DELETE(uuid));
     }
 
     async enableUser(uuid: string) {
-        return this.post(REST_API.USERS.ACTIONS.ENABLE(uuid));
+        return this.post<EnableUserCommand.Response>(REST_API.USERS.ACTIONS.ENABLE(uuid));
     }
 
     async disableUser(uuid: string) {
-        return this.post(REST_API.USERS.ACTIONS.DISABLE(uuid));
+        return this.post<DisableUserCommand.Response>(REST_API.USERS.ACTIONS.DISABLE(uuid));
     }
 
     async revokeUserSubscription(uuid: string) {
-        return this.post(REST_API.USERS.ACTIONS.REVOKE_SUBSCRIPTION(uuid));
+        return this.post<RevokeUserSubscriptionCommand.Response>(REST_API.USERS.ACTIONS.REVOKE_SUBSCRIPTION(uuid));
     }
 
     async resetUserTraffic(uuid: string) {
-        return this.post(REST_API.USERS.ACTIONS.RESET_TRAFFIC(uuid));
+        return this.post<ResetUserTrafficCommand.Response>(REST_API.USERS.ACTIONS.RESET_TRAFFIC(uuid));
     }
 
-    async bulkDeleteUsersByStatus(params: Record<string, unknown>) {
-        return this.post(REST_API.USERS.BULK.DELETE_BY_STATUS, params);
+    async bulkDeleteUsersByStatus(params: BulkDeleteUsersByStatusCommand.Request) {
+        return this.post<BulkDeleteUsersByStatusCommand.Response>(REST_API.USERS.BULK.DELETE_BY_STATUS, params);
     }
 
-    async bulkUpdateUsers(params: Record<string, unknown>) {
-        return this.post(REST_API.USERS.BULK.UPDATE, params);
+    async bulkUpdateUsers(params: BulkUpdateUsersCommand.Request) {
+        return this.post<BulkUpdateUsersCommand.Response>(REST_API.USERS.BULK.UPDATE, params);
     }
 
-    async bulkResetUsersTraffic(params: Record<string, unknown>) {
-        return this.post(REST_API.USERS.BULK.RESET_TRAFFIC, params);
+    async bulkResetUsersTraffic(params: BulkResetTrafficUsersCommand.Request) {
+        return this.post<BulkResetTrafficUsersCommand.Response>(REST_API.USERS.BULK.RESET_TRAFFIC, params);
     }
 
-    async bulkRevokeUsersSubscription(params: Record<string, unknown>) {
-        return this.post(REST_API.USERS.BULK.REVOKE_SUBSCRIPTION, params);
+    async bulkRevokeUsersSubscription(params: BulkRevokeUsersSubscriptionCommand.Request) {
+        return this.post<BulkRevokeUsersSubscriptionCommand.Response>(REST_API.USERS.BULK.REVOKE_SUBSCRIPTION, params);
     }
 
-    async bulkDeleteUsers(params: Record<string, unknown>) {
-        return this.post(REST_API.USERS.BULK.DELETE, params);
+    async bulkDeleteUsers(params: BulkDeleteUsersCommand.Request) {
+        return this.post<BulkDeleteUsersCommand.Response>(REST_API.USERS.BULK.DELETE, params);
     }
 
-    async bulkUpdateUserSquads(params: Record<string, unknown>) {
-        return this.post(REST_API.USERS.BULK.UPDATE_SQUADS, params);
+    async bulkUpdateUserSquads(params: BulkUpdateUsersSquadsCommand.Request) {
+        return this.post<BulkUpdateUsersSquadsCommand.Response>(REST_API.USERS.BULK.UPDATE_SQUADS, params);
     }
 
-    async bulkExtendUsersExpiration(params: Record<string, unknown>) {
-        return this.post(REST_API.USERS.BULK.EXTEND_EXPIRATION_DATE, params);
+    async bulkExtendUsersExpiration(params: BulkExtendExpirationDateCommand.Request) {
+        return this.post<BulkExtendExpirationDateCommand.Response>(REST_API.USERS.BULK.EXTEND_EXPIRATION_DATE, params);
     }
 
-    async bulkAllUpdateUsers(params: Record<string, unknown>) {
-        return this.post(REST_API.USERS.BULK.ALL.UPDATE, params);
+    async bulkAllUpdateUsers(params: BulkAllUpdateUsersCommand.Request) {
+        return this.post<BulkAllUpdateUsersCommand.Response>(REST_API.USERS.BULK.ALL.UPDATE, params);
     }
 
     async bulkAllResetUsersTraffic() {
-        return this.post(REST_API.USERS.BULK.ALL.RESET_TRAFFIC);
+        return this.post<BulkAllResetTrafficUsersCommand.Response>(REST_API.USERS.BULK.ALL.RESET_TRAFFIC);
     }
 
-    async bulkAllExtendUsersExpiration(params: Record<string, unknown>) {
-        return this.post(REST_API.USERS.BULK.ALL.EXTEND_EXPIRATION_DATE, params);
+    async bulkAllExtendUsersExpiration(params: BulkAllExtendExpirationDateCommand.Request) {
+        return this.post<BulkAllExtendExpirationDateCommand.Response>(REST_API.USERS.BULK.ALL.EXTEND_EXPIRATION_DATE, params);
     }
 
     // Nodes
@@ -198,52 +285,52 @@ export class RemnawaveClient {
         return this.get(REST_API.NODES.TAGS.GET);
     }
 
-    async createNode(params: Record<string, unknown>) {
-        return this.post(REST_API.NODES.CREATE, params);
+    async createNode(params: CreateNodeCommand.Request) {
+        return this.post<CreateNodeCommand.Response>(REST_API.NODES.CREATE, params);
     }
 
-    async updateNode(params: Record<string, unknown>) {
-        return this.patch(REST_API.NODES.UPDATE, params);
+    async updateNode(params: UpdateNodeCommand.Request) {
+        return this.patch<UpdateNodeCommand.Response>(REST_API.NODES.UPDATE, params);
     }
 
     async deleteNode(uuid: string) {
-        return this.delete(REST_API.NODES.DELETE(uuid));
+        return this.delete<DeleteNodeCommand.Response>(REST_API.NODES.DELETE(uuid));
     }
 
     async enableNode(uuid: string) {
-        return this.post(REST_API.NODES.ACTIONS.ENABLE(uuid));
+        return this.post<EnableNodeCommand.Response>(REST_API.NODES.ACTIONS.ENABLE(uuid));
     }
 
     async disableNode(uuid: string) {
-        return this.post(REST_API.NODES.ACTIONS.DISABLE(uuid));
+        return this.post<DisableNodeCommand.Response>(REST_API.NODES.ACTIONS.DISABLE(uuid));
     }
 
     async restartNode(uuid: string) {
-        return this.post(REST_API.NODES.ACTIONS.RESTART(uuid));
+        return this.post<RestartNodeCommand.Response>(REST_API.NODES.ACTIONS.RESTART(uuid));
     }
 
     async restartAllNodes() {
-        return this.post(REST_API.NODES.ACTIONS.RESTART_ALL);
+        return this.post<RestartAllNodesCommand.Response>(REST_API.NODES.ACTIONS.RESTART_ALL);
     }
 
     async resetNodeTraffic(uuid: string) {
-        return this.post(REST_API.NODES.ACTIONS.RESET_TRAFFIC(uuid));
+        return this.post<ResetNodeTrafficCommand.Response>(REST_API.NODES.ACTIONS.RESET_TRAFFIC(uuid));
     }
 
-    async reorderNodes(nodes: Array<{ viewPosition: number; uuid: string }>) {
-        return this.post(REST_API.NODES.ACTIONS.REORDER, { nodes });
+    async reorderNodes(nodes: ReorderNodeCommand.Request['nodes']) {
+        return this.post<ReorderNodeCommand.Response>(REST_API.NODES.ACTIONS.REORDER, { nodes });
     }
 
-    async bulkNodeProfileModification(params: Record<string, unknown>) {
-        return this.post(REST_API.NODES.BULK_ACTIONS.PROFILE_MODIFICATION, params);
+    async bulkNodeProfileModification(params: BulkNodesProfileModificationCommand.Request) {
+        return this.post<BulkNodesProfileModificationCommand.Response>(REST_API.NODES.BULK_ACTIONS.PROFILE_MODIFICATION, params);
     }
 
-    async bulkNodeActions(params: Record<string, unknown>) {
-        return this.post(REST_API.NODES.BULK_ACTIONS.ACTIONS, params);
+    async bulkNodeActions(params: BulkNodesActionsCommand.Request) {
+        return this.post<BulkNodesActionsCommand.Response>(REST_API.NODES.BULK_ACTIONS.ACTIONS, params);
     }
 
-    async bulkUpdateNodes(params: Record<string, unknown>) {
-        return this.post(REST_API.NODES.BULK_ACTIONS.UPDATE, params);
+    async bulkUpdateNodes(params: BulkNodesUpdateCommand.Request) {
+        return this.post<BulkNodesUpdateCommand.Response>(REST_API.NODES.BULK_ACTIONS.UPDATE, params);
     }
 
     // Hosts
@@ -260,36 +347,36 @@ export class RemnawaveClient {
         return this.get(REST_API.HOSTS.TAGS.GET);
     }
 
-    async createHost(params: Record<string, unknown>) {
-        return this.post(REST_API.HOSTS.CREATE, params);
+    async createHost(params: CreateHostCommand.Request) {
+        return this.post<CreateHostCommand.Response>(REST_API.HOSTS.CREATE, params);
     }
 
-    async updateHost(params: Record<string, unknown>) {
-        return this.patch(REST_API.HOSTS.UPDATE, params);
+    async updateHost(params: UpdateHostCommand.Request) {
+        return this.patch<UpdateHostCommand.Response>(REST_API.HOSTS.UPDATE, params);
     }
 
     async deleteHost(uuid: string) {
-        return this.delete(REST_API.HOSTS.DELETE(uuid));
+        return this.delete<DeleteHostCommand.Response>(REST_API.HOSTS.DELETE(uuid));
     }
 
-    async bulkEnableHosts(params: Record<string, unknown>) {
-        return this.post(REST_API.HOSTS.BULK.ENABLE_HOSTS, params);
+    async bulkEnableHosts(params: BulkEnableHostsCommand.Request) {
+        return this.post<BulkEnableHostsCommand.Response>(REST_API.HOSTS.BULK.ENABLE_HOSTS, params);
     }
 
-    async bulkDisableHosts(params: Record<string, unknown>) {
-        return this.post(REST_API.HOSTS.BULK.DISABLE_HOSTS, params);
+    async bulkDisableHosts(params: BulkDisableHostsCommand.Request) {
+        return this.post<BulkDisableHostsCommand.Response>(REST_API.HOSTS.BULK.DISABLE_HOSTS, params);
     }
 
-    async bulkDeleteHosts(params: Record<string, unknown>) {
-        return this.post(REST_API.HOSTS.BULK.DELETE_HOSTS, params);
+    async bulkDeleteHosts(params: BulkDeleteHostsCommand.Request) {
+        return this.post<BulkDeleteHostsCommand.Response>(REST_API.HOSTS.BULK.DELETE_HOSTS, params);
     }
 
-    async bulkSetHostInbound(params: Record<string, unknown>) {
-        return this.post(REST_API.HOSTS.BULK.SET_INBOUND, params);
+    async bulkSetHostInbound(params: UpdateManyHostsCommand.Request) {
+        return this.post<UpdateManyHostsCommand.Response>(REST_API.HOSTS.BULK.UPDATE, params);
     }
 
-    async bulkSetHostPort(params: Record<string, unknown>) {
-        return this.post(REST_API.HOSTS.BULK.SET_PORT, params);
+    async bulkSetHostPort(params: UpdateManyHostsCommand.Request) {
+        return this.post<UpdateManyHostsCommand.Response>(REST_API.HOSTS.BULK.UPDATE, params);
     }
 
     // System
@@ -326,8 +413,8 @@ export class RemnawaveClient {
         return this.get(REST_API.SYSTEM.TOOLS.GENERATE_X25519);
     }
 
-    async testSrrMatcher(params: Record<string, unknown>) {
-        return this.post(REST_API.SYSTEM.TESTERS.SRR_MATCHER, params);
+    async testSrrMatcher(params: TestSrrMatcherCommand.Request) {
+        return this.post<TestSrrMatcherCommand.Response>(REST_API.SYSTEM.TESTERS.SRR_MATCHER, params);
     }
 
     // Subscriptions
@@ -396,20 +483,20 @@ export class RemnawaveClient {
         return this.get(REST_API.CONFIG_PROFILES.GET_COMPUTED_CONFIG_BY_PROFILE_UUID(uuid));
     }
 
-    async createConfigProfile(params: Record<string, unknown>) {
-        return this.post(REST_API.CONFIG_PROFILES.CREATE, params);
+    async createConfigProfile(params: CreateConfigProfileCommand.Request) {
+        return this.post<CreateConfigProfileCommand.Response>(REST_API.CONFIG_PROFILES.CREATE, params);
     }
 
-    async updateConfigProfile(params: Record<string, unknown>) {
-        return this.patch(REST_API.CONFIG_PROFILES.UPDATE, params);
+    async updateConfigProfile(params: UpdateConfigProfileCommand.Request) {
+        return this.patch<UpdateConfigProfileCommand.Response>(REST_API.CONFIG_PROFILES.UPDATE, params);
     }
 
     async deleteConfigProfile(uuid: string) {
-        return this.delete(REST_API.CONFIG_PROFILES.DELETE(uuid));
+        return this.delete<DeleteConfigProfileCommand.Response>(REST_API.CONFIG_PROFILES.DELETE(uuid));
     }
 
-    async reorderConfigProfiles(params: Record<string, unknown>) {
-        return this.post(REST_API.CONFIG_PROFILES.ACTIONS.REORDER, params);
+    async reorderConfigProfiles(params: ReorderConfigProfileCommand.Request) {
+        return this.post<ReorderConfigProfileCommand.Response>(REST_API.CONFIG_PROFILES.ACTIONS.REORDER, params);
     }
 
     // Internal Squads
@@ -422,16 +509,16 @@ export class RemnawaveClient {
         return this.get(REST_API.INTERNAL_SQUADS.ACCESSIBLE_NODES(uuid));
     }
 
-    async createInternalSquad(params: Record<string, unknown>) {
-        return this.post(REST_API.INTERNAL_SQUADS.CREATE, params);
+    async createInternalSquad(params: CreateInternalSquadCommand.Request) {
+        return this.post<CreateInternalSquadCommand.Response>(REST_API.INTERNAL_SQUADS.CREATE, params);
     }
 
-    async updateInternalSquad(params: Record<string, unknown>) {
-        return this.patch(REST_API.INTERNAL_SQUADS.UPDATE, params);
+    async updateInternalSquad(params: UpdateInternalSquadCommand.Request) {
+        return this.patch<UpdateInternalSquadCommand.Response>(REST_API.INTERNAL_SQUADS.UPDATE, params);
     }
 
     async deleteInternalSquad(uuid: string) {
-        return this.delete(REST_API.INTERNAL_SQUADS.DELETE(uuid));
+        return this.delete<DeleteInternalSquadCommand.Response>(REST_API.INTERNAL_SQUADS.DELETE(uuid));
     }
 
     async addUsersToSquad(squadUuid: string, userUuids: string[]) {
@@ -466,21 +553,21 @@ export class RemnawaveClient {
         return this.get(REST_API.HWID.TOP_USERS_BY_DEVICES);
     }
 
-    async createUserHwidDevice(params: Record<string, unknown>) {
-        return this.post(REST_API.HWID.CREATE_USER_HWID_DEVICE, params);
+    async createUserHwidDevice(params: CreateUserHwidDeviceCommand.Request) {
+        return this.post<CreateUserHwidDeviceCommand.Response>(REST_API.HWID.CREATE_USER_HWID_DEVICE, params);
     }
 
     async deleteHwidDevice(userUuid: string, hwid: string) {
-        return this.post(REST_API.HWID.DELETE_USER_HWID_DEVICE, {
+        return this.post<DeleteUserHwidDeviceCommand.Response>(REST_API.HWID.DELETE_USER_HWID_DEVICE, {
             userUuid,
             hwid,
-        });
+        } as DeleteUserHwidDeviceCommand.Request);
     }
 
     async deleteAllUserHwidDevices(userUuid: string) {
-        return this.post(REST_API.HWID.DELETE_ALL_USER_HWID_DEVICES, {
+        return this.post<DeleteAllUserHwidDevicesCommand.Response>(REST_API.HWID.DELETE_ALL_USER_HWID_DEVICES, {
             userUuid,
-        });
+        } as DeleteAllUserHwidDevicesCommand.Request);
     }
 
     // Bandwidth Stats
@@ -509,12 +596,12 @@ export class RemnawaveClient {
         return this.get(REST_API.API_TOKENS.GET);
     }
 
-    async createApiToken(params: Record<string, unknown>) {
-        return this.post(REST_API.API_TOKENS.CREATE, params);
+    async createApiToken(params: CreateApiTokenCommand.Request) {
+        return this.post<CreateApiTokenCommand.Response>(REST_API.API_TOKENS.CREATE, params);
     }
 
     async deleteApiToken(uuid: string) {
-        return this.delete(REST_API.API_TOKENS.DELETE(uuid));
+        return this.delete<DeleteApiTokenCommand.Response>(REST_API.API_TOKENS.DELETE(uuid));
     }
 
     // Keygen
@@ -533,44 +620,44 @@ export class RemnawaveClient {
         return this.get(REST_API.INFRA_BILLING.GET_PROVIDER_BY_UUID(uuid));
     }
 
-    async createBillingProvider(params: Record<string, unknown>) {
-        return this.post(REST_API.INFRA_BILLING.CREATE_PROVIDER, params);
+    async createBillingProvider(params: CreateInfraProviderCommand.Request) {
+        return this.post<CreateInfraProviderCommand.Response>(REST_API.INFRA_BILLING.CREATE_PROVIDER, params);
     }
 
-    async updateBillingProvider(params: Record<string, unknown>) {
-        return this.patch(REST_API.INFRA_BILLING.UPDATE_PROVIDER, params);
+    async updateBillingProvider(params: UpdateInfraProviderCommand.Request) {
+        return this.patch<UpdateInfraProviderCommand.Response>(REST_API.INFRA_BILLING.UPDATE_PROVIDER, params);
     }
 
     async deleteBillingProvider(uuid: string) {
-        return this.delete(REST_API.INFRA_BILLING.DELETE_PROVIDER(uuid));
+        return this.delete<DeleteInfraProviderByUuidCommand.Response>(REST_API.INFRA_BILLING.DELETE_PROVIDER(uuid));
     }
 
     async getBillingNodes() {
         return this.get(REST_API.INFRA_BILLING.GET_BILLING_NODES);
     }
 
-    async createBillingNode(params: Record<string, unknown>) {
-        return this.post(REST_API.INFRA_BILLING.CREATE_BILLING_NODE, params);
+    async createBillingNode(params: CreateInfraBillingNodeCommand.Request) {
+        return this.post<CreateInfraBillingNodeCommand.Response>(REST_API.INFRA_BILLING.CREATE_BILLING_NODE, params);
     }
 
-    async updateBillingNode(params: Record<string, unknown>) {
-        return this.patch(REST_API.INFRA_BILLING.UPDATE_BILLING_NODE, params);
+    async updateBillingNode(params: UpdateInfraBillingNodeCommand.Request) {
+        return this.patch<UpdateInfraBillingNodeCommand.Response>(REST_API.INFRA_BILLING.UPDATE_BILLING_NODE, params);
     }
 
     async deleteBillingNode(uuid: string) {
-        return this.delete(REST_API.INFRA_BILLING.DELETE_BILLING_NODE(uuid));
+        return this.delete<DeleteInfraBillingNodeByUuidCommand.Response>(REST_API.INFRA_BILLING.DELETE_BILLING_NODE(uuid));
     }
 
     async getBillingHistory() {
         return this.get(REST_API.INFRA_BILLING.GET_BILLING_HISTORY);
     }
 
-    async createBillingHistory(params: Record<string, unknown>) {
-        return this.post(REST_API.INFRA_BILLING.CREATE_BILLING_HISTORY, params);
+    async createBillingHistory(params: CreateInfraBillingHistoryRecordCommand.Request) {
+        return this.post<CreateInfraBillingHistoryRecordCommand.Response>(REST_API.INFRA_BILLING.CREATE_BILLING_HISTORY, params);
     }
 
     async deleteBillingHistory(uuid: string) {
-        return this.delete(REST_API.INFRA_BILLING.DELETE_BILLING_HISTORY(uuid));
+        return this.delete<DeleteInfraBillingHistoryRecordCommand.Response>(REST_API.INFRA_BILLING.DELETE_BILLING_HISTORY(uuid));
     }
 
     // Snippets
@@ -579,16 +666,16 @@ export class RemnawaveClient {
         return this.get(REST_API.SNIPPETS.GET);
     }
 
-    async createSnippet(params: Record<string, unknown>) {
-        return this.post(REST_API.SNIPPETS.CREATE, params);
+    async createSnippet(params: CreateSnippetCommand.Request) {
+        return this.post<CreateSnippetCommand.Response>(REST_API.SNIPPETS.CREATE, params);
     }
 
-    async updateSnippet(params: Record<string, unknown>) {
-        return this.patch(REST_API.SNIPPETS.UPDATE, params);
+    async updateSnippet(params: UpdateSnippetCommand.Request) {
+        return this.patch<UpdateSnippetCommand.Response>(REST_API.SNIPPETS.UPDATE, params);
     }
 
-    async deleteSnippet(params: Record<string, unknown>) {
-        return this.post(REST_API.SNIPPETS.DELETE, params);
+    async deleteSnippet(params: DeleteSnippetCommand.Request) {
+        return this.post<DeleteSnippetCommand.Response>(REST_API.SNIPPETS.DELETE, params);
     }
 
     // External Squads
@@ -601,16 +688,16 @@ export class RemnawaveClient {
         return this.get(REST_API.EXTERNAL_SQUADS.GET_BY_UUID(uuid));
     }
 
-    async createExternalSquad(params: Record<string, unknown>) {
-        return this.post(REST_API.EXTERNAL_SQUADS.CREATE, params);
+    async createExternalSquad(params: CreateExternalSquadCommand.Request) {
+        return this.post<CreateExternalSquadCommand.Response>(REST_API.EXTERNAL_SQUADS.CREATE, params);
     }
 
-    async updateExternalSquad(params: Record<string, unknown>) {
-        return this.patch(REST_API.EXTERNAL_SQUADS.UPDATE, params);
+    async updateExternalSquad(params: UpdateExternalSquadCommand.Request) {
+        return this.patch<UpdateExternalSquadCommand.Response>(REST_API.EXTERNAL_SQUADS.UPDATE, params);
     }
 
     async deleteExternalSquad(uuid: string) {
-        return this.delete(REST_API.EXTERNAL_SQUADS.DELETE(uuid));
+        return this.delete<DeleteExternalSquadCommand.Response>(REST_API.EXTERNAL_SQUADS.DELETE(uuid));
     }
 
     async addUsersToExternalSquad(squadUuid: string, userUuids: string[]) {
@@ -627,8 +714,8 @@ export class RemnawaveClient {
         );
     }
 
-    async reorderExternalSquads(params: Record<string, unknown>) {
-        return this.post(REST_API.EXTERNAL_SQUADS.ACTIONS.REORDER, params);
+    async reorderExternalSquads(params: ReorderExternalSquadCommand.Request) {
+        return this.post<ReorderExternalSquadCommand.Response>(REST_API.EXTERNAL_SQUADS.ACTIONS.REORDER, params);
     }
 
     // Settings
@@ -637,8 +724,8 @@ export class RemnawaveClient {
         return this.get(REST_API.REMNAAWAVE_SETTINGS.GET);
     }
 
-    async updateSettings(params: Record<string, unknown>) {
-        return this.patch(REST_API.REMNAAWAVE_SETTINGS.UPDATE, params);
+    async updateSettings(params: UpdateRemnawaveSettingsCommand.Request) {
+        return this.patch<UpdateRemnawaveSettingsCommand.Response>(REST_API.REMNAAWAVE_SETTINGS.UPDATE, params);
     }
 
     // Subscription Page Configs
@@ -651,24 +738,24 @@ export class RemnawaveClient {
         return this.get(REST_API.SUBSCRIPTION_PAGE_CONFIGS.GET(uuid));
     }
 
-    async createSubscriptionPageConfig(params: Record<string, unknown>) {
-        return this.post(REST_API.SUBSCRIPTION_PAGE_CONFIGS.CREATE, params);
+    async createSubscriptionPageConfig(params: CreateSubscriptionPageConfigCommand.Request) {
+        return this.post<CreateSubscriptionPageConfigCommand.Response>(REST_API.SUBSCRIPTION_PAGE_CONFIGS.CREATE, params);
     }
 
-    async updateSubscriptionPageConfig(params: Record<string, unknown>) {
-        return this.patch(REST_API.SUBSCRIPTION_PAGE_CONFIGS.UPDATE, params);
+    async updateSubscriptionPageConfig(params: UpdateSubscriptionPageConfigCommand.Request) {
+        return this.patch<UpdateSubscriptionPageConfigCommand.Response>(REST_API.SUBSCRIPTION_PAGE_CONFIGS.UPDATE, params);
     }
 
     async deleteSubscriptionPageConfig(uuid: string) {
-        return this.delete(REST_API.SUBSCRIPTION_PAGE_CONFIGS.DELETE(uuid));
+        return this.delete<DeleteSubscriptionPageConfigCommand.Response>(REST_API.SUBSCRIPTION_PAGE_CONFIGS.DELETE(uuid));
     }
 
-    async reorderSubscriptionPageConfigs(params: Record<string, unknown>) {
-        return this.post(REST_API.SUBSCRIPTION_PAGE_CONFIGS.ACTIONS.REORDER, params);
+    async reorderSubscriptionPageConfigs(params: ReorderSubscriptionPageConfigsCommand.Request) {
+        return this.post<ReorderSubscriptionPageConfigsCommand.Response>(REST_API.SUBSCRIPTION_PAGE_CONFIGS.ACTIONS.REORDER, params);
     }
 
-    async cloneSubscriptionPageConfig(params: Record<string, unknown>) {
-        return this.post(REST_API.SUBSCRIPTION_PAGE_CONFIGS.ACTIONS.CLONE, params);
+    async cloneSubscriptionPageConfig(params: CloneSubscriptionPageConfigCommand.Request) {
+        return this.post<CloneSubscriptionPageConfigCommand.Response>(REST_API.SUBSCRIPTION_PAGE_CONFIGS.ACTIONS.CLONE, params);
     }
 
     // Node Plugins
@@ -681,28 +768,28 @@ export class RemnawaveClient {
         return this.get(REST_API.NODE_PLUGINS.GET(uuid));
     }
 
-    async createNodePlugin(params: Record<string, unknown>) {
-        return this.post(REST_API.NODE_PLUGINS.CREATE, params);
+    async createNodePlugin(params: CreateNodePluginCommand.Request) {
+        return this.post<CreateNodePluginCommand.Response>(REST_API.NODE_PLUGINS.CREATE, params);
     }
 
-    async updateNodePlugin(params: Record<string, unknown>) {
-        return this.patch(REST_API.NODE_PLUGINS.UPDATE, params);
+    async updateNodePlugin(params: UpdateNodePluginCommand.Request) {
+        return this.patch<UpdateNodePluginCommand.Response>(REST_API.NODE_PLUGINS.UPDATE, params);
     }
 
     async deleteNodePlugin(uuid: string) {
-        return this.delete(REST_API.NODE_PLUGINS.DELETE(uuid));
+        return this.delete<DeleteNodePluginCommand.Response>(REST_API.NODE_PLUGINS.DELETE(uuid));
     }
 
-    async reorderNodePlugins(params: Record<string, unknown>) {
-        return this.post(REST_API.NODE_PLUGINS.ACTIONS.REORDER, params);
+    async reorderNodePlugins(params: ReorderNodePluginCommand.Request) {
+        return this.post<ReorderNodePluginCommand.Response>(REST_API.NODE_PLUGINS.ACTIONS.REORDER, params);
     }
 
-    async cloneNodePlugin(params: Record<string, unknown>) {
-        return this.post(REST_API.NODE_PLUGINS.ACTIONS.CLONE, params);
+    async cloneNodePlugin(params: CloneNodePluginCommand.Request) {
+        return this.post<CloneNodePluginCommand.Response>(REST_API.NODE_PLUGINS.ACTIONS.CLONE, params);
     }
 
-    async executeNodePlugin(params: Record<string, unknown>) {
-        return this.post(REST_API.NODE_PLUGINS.EXECUTOR, params);
+    async executeNodePlugin(params: PluginExecutorCommand.Request) {
+        return this.post<PluginExecutorCommand.Response>(REST_API.NODE_PLUGINS.EXECUTOR, params);
     }
 
     async getTorrentBlockerReports() {
@@ -727,8 +814,8 @@ export class RemnawaveClient {
         return this.get(REST_API.IP_CONTROL.GET_FETCH_IPS_RESULT(jobId));
     }
 
-    async dropConnections(params: Record<string, unknown>) {
-        return this.post(REST_API.IP_CONTROL.DROP_CONNECTIONS, params);
+    async dropConnections(params: DropConnectionsCommand.Request) {
+        return this.post<DropConnectionsCommand.Response>(REST_API.IP_CONTROL.DROP_CONNECTIONS, params);
     }
 
     async fetchUsersIps(nodeUuid: string) {

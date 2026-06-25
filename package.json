@@ -7,11 +7,13 @@
     "remnawave-mcp": "dist/index.js"
   },
   "main": "dist/index.js",
-  "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "start": "node dist/index.js"
-  },
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "start": "node dist/index.js",
+        "test": "vitest run",
+        "test:watch": "vitest"
+    },
   "keywords": [
     "mcp",
     "remnawave",
@@ -21,14 +23,15 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1",
-    "@remnawave/backend-contract": "^2.8.26",
-    "zod": "^3.25.76"
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@remnawave/backend-contract": "^2.8.28",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
+    "@types/node": "^22.20.0",
     "tsup": "^8.0.0",
-    "typescript": "^5.7.0"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   },
   "engines": {
     "node": ">=22.0.0"

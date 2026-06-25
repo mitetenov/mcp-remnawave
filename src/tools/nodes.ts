@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import type { CreateNodeCommand } from '@remnawave/backend-contract';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
@@ -114,7 +115,7 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
                 if (params.consumptionMultiplier !== undefined)
                     body.consumptionMultiplier = params.consumptionMultiplier;
 
-                const result = await client.createNode(body);
+                const result = await client.createNode(body as CreateNodeCommand.Request);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);

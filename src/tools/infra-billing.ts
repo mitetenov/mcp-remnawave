@@ -50,16 +50,25 @@ export function registerInfraBillingTools(server: McpServer, client: RemnawaveCl
     server.tool('billing_node_create', 'Create a billing node', {
         nodeUuid: z.string().describe('Node UUID'),
         providerUuid: z.string().describe('Provider UUID'),
+        name: z.string().nullish().describe('Billing node name'),
         nextBillingAt: z.string().optional().describe('Next billing date (ISO 8601)'),
     }, async (params) => {
-        try { return toolResult(await client.createBillingNode(params)); } catch (e) { return toolError(e); }
+        try { return toolResult(await client.createBillingNode({
+            nodeUuid: params.nodeUuid ?? null,
+            providerUuid: params.providerUuid,
+            name: params.name ?? null,
+            nextBillingAt: new Date(params.nextBillingAt ?? Date.now()),
+        })); } catch (e) { return toolError(e); }
     });
 
     server.tool('billing_node_update', 'Update a billing node', {
         uuids: z.array(z.string()).describe('Array of billing node UUIDs'),
         nextBillingAt: z.string().describe('New next billing date (ISO 8601)'),
     }, async (params) => {
-        try { return toolResult(await client.updateBillingNode(params)); } catch (e) { return toolError(e); }
+        try { return toolResult(await client.updateBillingNode({
+            uuids: params.uuids,
+            nextBillingAt: new Date(params.nextBillingAt),
+        })); } catch (e) { return toolError(e); }
     });
 
     server.tool('billing_node_delete', 'Delete a billing node', {
@@ -73,7 +82,11 @@ export function registerInfraBillingTools(server: McpServer, client: RemnawaveCl
         amount: z.number().describe('Amount'),
         billedAt: z.string().describe('Billing date (ISO 8601)'),
     }, async (params) => {
-        try { return toolResult(await client.createBillingHistory(params)); } catch (e) { return toolError(e); }
+        try { return toolResult(await client.createBillingHistory({
+            providerUuid: params.providerUuid,
+            amount: params.amount,
+            billedAt: new Date(params.billedAt),
+        })); } catch (e) { return toolError(e); }
     });
 
     server.tool('billing_history_delete', 'Delete a billing history entry', {
