@@ -11,7 +11,7 @@ export function registerSettingsTools(server: McpServer, client: RemnawaveClient
     if (readonly) return;
 
     server.tool('settings_update', 'Update Remnawave panel settings', {
-        settings: z.record(z.string(), z.unknown()).describe('Settings key-value pairs to update'),
+        settings: z.object({}).catchall(z.unknown()).describe('Settings key-value pairs to update'),
     }, async ({ settings }) => {
         try { return toolResult(await client.updateSettings(settings)); } catch (e) { return toolError(e); }
     });

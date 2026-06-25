@@ -91,7 +91,7 @@ export function registerInboundTools(
         'Create a new config profile',
         {
             name: z.string().describe('Profile name'),
-            config: z.record(z.string(), z.unknown()).describe('Config profile configuration object'),
+            config: z.object({}).catchall(z.unknown()).describe('Config profile configuration object'),
         },
         async (params) => {
             try {
