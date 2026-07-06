@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import type { CreateUserCommand, UpdateUserCommand } from '@remnawave/backend-contract';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
@@ -203,7 +204,10 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient, re
         },
         async (params) => {
             try {
-                const result = await client.createUser(params);
+                const result = await client.createUser({
+                    ...params,
+                    expireAt: new Date(params.expireAt),
+                } as CreateUserCommand.Request);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -249,7 +253,10 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient, re
         },
         async (params) => {
             try {
-                const result = await client.updateUser(params);
+                const result = await client.updateUser({
+                    ...params,
+                    expireAt: params.expireAt ? new Date(params.expireAt) : undefined,
+                } as UpdateUserCommand.Request);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -372,7 +379,13 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient, re
         async (params) => {
             try {
                 const { uuids, ...fields } = params;
-                const result = await client.bulkUpdateUsers({ uuids, fields });
+                const result = await client.bulkUpdateUsers({
+                    uuids,
+                    fields: {
+                        ...fields,
+                        expireAt: fields.expireAt ? new Date(fields.expireAt) : undefined,
+                    },
+                });
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -478,7 +491,10 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient, re
         },
         async (params) => {
             try {
-                const result = await client.bulkAllUpdateUsers(params);
+                const result = await client.bulkAllUpdateUsers({
+                    ...params,
+                    expireAt: params.expireAt ? new Date(params.expireAt) : undefined,
+                });
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);

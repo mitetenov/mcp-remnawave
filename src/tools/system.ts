@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import type { TestSrrMatcherCommand } from '@remnawave/backend-contract';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
@@ -137,11 +138,11 @@ export function registerSystemTools(
         'system_srr_matcher',
         'Test subscription request routing rules',
         {
-            responseRules: z.record(z.unknown()).describe('Response rules configuration object with version and rules array'),
+            responseRules: z.object({}).catchall(z.unknown()).describe('Response rules configuration object with version and rules array'),
         },
         async (params) => {
             try {
-                const result = await client.testSrrMatcher(params);
+                const result = await client.testSrrMatcher(params as TestSrrMatcherCommand.Request);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);

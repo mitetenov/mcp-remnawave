@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import type { CreateHostCommand, UpdateHostCommand } from '@remnawave/backend-contract';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
@@ -191,7 +192,7 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 if (params.mihomoX25519 !== undefined)
                     body.mihomoX25519 = params.mihomoX25519;
 
-                const result = await client.createHost(body);
+                const result = await client.createHost(body as CreateHostCommand.Request);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -298,7 +299,7 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                         ...(configProfileInboundUuid !== undefined ? { configProfileInboundUuid } : {}),
                     };
                 }
-                const result = await client.updateHost(body);
+                const result = await client.updateHost(body as UpdateHostCommand.Request);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
