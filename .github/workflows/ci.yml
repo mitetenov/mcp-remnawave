@@ -64,6 +64,13 @@ jobs:
           files: mcp-release.zip
           generate_release_notes: true
 
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: mitetenov/remnawave-mcp:latest
+
   docker-build-and-push:
     runs-on: ubuntu-latest
     steps:
