@@ -82,6 +82,19 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
                 .number()
                 .optional()
                 .describe('Traffic consumption multiplier'),
+            nodeConsumptionMultiplier: z
+                .number()
+                .optional()
+                .describe('Node consumption multiplier (Remnawave 2.8+)'),
+            note: z
+                .string()
+                .max(255)
+                .optional()
+                .describe('Node note (max 255 chars)'),
+            proxyUrl: z
+                .string()
+                .optional()
+                .describe('SOCKS5 proxy URL'),
             activeConfigProfileUuid: z
                 .string()
                 .describe('Config profile UUID to assign'),
@@ -114,6 +127,12 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
                     body.notifyPercent = params.notifyPercent;
                 if (params.consumptionMultiplier !== undefined)
                     body.consumptionMultiplier = params.consumptionMultiplier;
+                if (params.nodeConsumptionMultiplier !== undefined)
+                    body.nodeConsumptionMultiplier = params.nodeConsumptionMultiplier;
+                if (params.note !== undefined)
+                    body.note = params.note;
+                if (params.proxyUrl !== undefined)
+                    body.proxyUrl = params.proxyUrl;
 
                 const result = await client.createNode(body as CreateNodeCommand.Request);
                 return toolResult(result);
@@ -152,6 +171,19 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
                 .number()
                 .optional()
                 .describe('New consumption multiplier'),
+            nodeConsumptionMultiplier: z
+                .number()
+                .optional()
+                .describe('New node consumption multiplier (Remnawave 2.8+)'),
+            note: z
+                .string()
+                .max(255)
+                .optional()
+                .describe('Node note (max 255 chars)'),
+            proxyUrl: z
+                .string()
+                .optional()
+                .describe('SOCKS5 proxy URL'),
         },
         async (params) => {
             try {
@@ -219,10 +251,14 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
         'Restart a specific node',
         {
             uuid: z.string().describe('Node UUID'),
+            forceRestart: z
+                .boolean()
+                .optional()
+                .describe('Force restart (required in Remnawave 2.8+)'),
         },
-        async ({ uuid }) => {
+        async ({ uuid, forceRestart }) => {
             try {
-                const result = await client.restartNode(uuid);
+                const result = await client.restartNode(uuid, forceRestart);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -233,10 +269,15 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
     server.tool(
         'nodes_restart_all',
         'Restart all nodes',
-        {},
-        async () => {
+        {
+            forceRestart: z
+                .boolean()
+                .optional()
+                .describe('Force restart (required in Remnawave 2.8+)'),
+        },
+        async ({ forceRestart }) => {
             try {
-                const result = await client.restartAllNodes();
+                const result = await client.restartAllNodes(forceRestart);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
