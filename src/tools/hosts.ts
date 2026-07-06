@@ -74,19 +74,9 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 .optional()
                 .describe('ALPN protocol'),
             fingerprint: z
-                .enum([
-                    'chrome',
-                    'firefox',
-                    'safari',
-                    'ios',
-                    'android',
-                    'edge',
-                    'qq',
-                    'random',
-                    'randomized',
-                ])
+                .string()
                 .optional()
-                .describe('TLS fingerprint'),
+                .describe('TLS fingerprint (free string in Remnawave 2.8+)'),
             isDisabled: z
                 .boolean()
                 .optional()
@@ -99,7 +89,11 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 .enum(['DEFAULT', 'TLS', 'NONE'])
                 .optional()
                 .describe('Security layer'),
-            tag: z.string().optional().describe('Host tag'),
+            tags: z
+                .array(z.string())
+                .max(10)
+                .optional()
+                .describe('Host tags (max 10, Remnawave 2.8+)'),
             serverDescription: z
                 .string()
                 .optional()
@@ -144,6 +138,18 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 .boolean()
                 .optional()
                 .describe('Enable Mihomo X25519'),
+            mihomoIpVersion: z
+                .enum(['dual', 'ipv4', 'ipv6', 'ipv4-prefer', 'ipv6-prefer'])
+                .optional()
+                .describe('Mihomo IP version (Remnawave 2.8+)'),
+            pinnedPeerCertSha256: z
+                .string()
+                .optional()
+                .describe('Pinned peer certificate SHA256 (replaces allowInsecure)'),
+            verifyPeerCertByName: z
+                .boolean()
+                .optional()
+                .describe('Verify peer certificate by name (Remnawave 2.8+)'),
         },
         async (params) => {
             try {
@@ -169,7 +175,7 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                     body.isHidden = params.isHidden;
                 if (params.securityLayer !== undefined)
                     body.securityLayer = params.securityLayer;
-                if (params.tag !== undefined) body.tag = params.tag;
+                if (params.tags !== undefined) body.tags = params.tags;
                 if (params.serverDescription !== undefined)
                     body.serverDescription = params.serverDescription;
                 if (params.nodes !== undefined) body.nodes = params.nodes;
@@ -183,14 +189,18 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                     body.overrideSniFromAddress = params.overrideSniFromAddress;
                 if (params.keepSniBlank !== undefined)
                     body.keepSniBlank = params.keepSniBlank;
-                if (params.allowInsecure !== undefined)
-                    body.allowInsecure = params.allowInsecure;
                 if (params.vlessRouteId !== undefined)
                     body.vlessRouteId = params.vlessRouteId;
                 if (params.shuffleHost !== undefined)
                     body.shuffleHost = params.shuffleHost;
                 if (params.mihomoX25519 !== undefined)
                     body.mihomoX25519 = params.mihomoX25519;
+                if (params.mihomoIpVersion !== undefined)
+                    body.mihomoIpVersion = params.mihomoIpVersion;
+                if (params.pinnedPeerCertSha256 !== undefined)
+                    body.pinnedPeerCertSha256 = params.pinnedPeerCertSha256;
+                if (params.verifyPeerCertByName !== undefined)
+                    body.verifyPeerCertByName = params.verifyPeerCertByName;
 
                 const result = await client.createHost(body as CreateHostCommand.Request);
                 return toolResult(result);
@@ -218,19 +228,9 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 .optional()
                 .describe('New ALPN'),
             fingerprint: z
-                .enum([
-                    'chrome',
-                    'firefox',
-                    'safari',
-                    'ios',
-                    'android',
-                    'edge',
-                    'qq',
-                    'random',
-                    'randomized',
-                ])
+                .string()
                 .optional()
-                .describe('New fingerprint'),
+                .describe('New fingerprint (free string in Remnawave 2.8+)'),
             isDisabled: z
                 .boolean()
                 .optional()
@@ -243,7 +243,11 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 .enum(['DEFAULT', 'TLS', 'NONE'])
                 .optional()
                 .describe('New security layer'),
-            tag: z.string().optional().describe('New tag'),
+            tags: z
+                .array(z.string())
+                .max(10)
+                .optional()
+                .describe('New tags (max 10, Remnawave 2.8+)'),
             serverDescription: z
                 .string()
                 .optional()
@@ -272,10 +276,6 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 .boolean()
                 .optional()
                 .describe('Keep SNI field blank'),
-            allowInsecure: z
-                .boolean()
-                .optional()
-                .describe('Allow insecure connections'),
             vlessRouteId: z
                 .number()
                 .optional()
@@ -288,6 +288,18 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 .boolean()
                 .optional()
                 .describe('Enable Mihomo X25519'),
+            mihomoIpVersion: z
+                .enum(['dual', 'ipv4', 'ipv6', 'ipv4-prefer', 'ipv6-prefer'])
+                .optional()
+                .describe('Mihomo IP version (Remnawave 2.8+)'),
+            pinnedPeerCertSha256: z
+                .string()
+                .optional()
+                .describe('Pinned peer certificate SHA256 (replaces allowInsecure)'),
+            verifyPeerCertByName: z
+                .boolean()
+                .optional()
+                .describe('Verify peer certificate by name (Remnawave 2.8+)'),
         },
         async (params) => {
             try {

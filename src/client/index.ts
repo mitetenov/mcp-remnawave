@@ -305,12 +305,18 @@ export class RemnawaveClient {
         return this.post<DisableNodeCommand.Response>(REST_API.NODES.ACTIONS.DISABLE(uuid));
     }
 
-    async restartNode(uuid: string) {
-        return this.post<RestartNodeCommand.Response>(REST_API.NODES.ACTIONS.RESTART(uuid));
+    async restartNode(uuid: string, forceRestart?: boolean) {
+        return this.post<RestartNodeCommand.Response>(
+            REST_API.NODES.ACTIONS.RESTART(uuid),
+            forceRestart !== undefined ? { forceRestart } : undefined,
+        );
     }
 
-    async restartAllNodes() {
-        return this.post<RestartAllNodesCommand.Response>(REST_API.NODES.ACTIONS.RESTART_ALL);
+    async restartAllNodes(forceRestart?: boolean) {
+        return this.post<RestartAllNodesCommand.Response>(
+            REST_API.NODES.ACTIONS.RESTART_ALL,
+            forceRestart !== undefined ? { forceRestart } : undefined,
+        );
     }
 
     async resetNodeTraffic(uuid: string) {
