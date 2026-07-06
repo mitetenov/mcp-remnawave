@@ -75,4 +75,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: mitetenov/remnawave-mcp:latest
+          tags: |
+            mitetenov/remnawave-mcp:latest
+            mitetenov/remnawave-mcp:${{ steps.version.outputs.tag }}
+            mitetenov/remnawave-mcp:${{ github.sha }}
