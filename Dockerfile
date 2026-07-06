@@ -26,5 +26,6 @@ COPY --from=build /app/dist ./dist
 # Use non-root user
 USER appuser
 
-# MCP server uses stdio transport — no network ports exposed
-CMD ["node", "dist/index.js"]
+# HTTP transport for containerized deployment
+EXPOSE 3100
+CMD ["node", "dist/http-index.js"]
