@@ -41,7 +41,6 @@ const httpServer = http.createServer(async (req, res) => {
 
 // Connect the MCP server to the HTTP transport
 await mcpServer.connect(transport);
-await transport.start();
 
 httpServer.listen(PORT, HOST, () => {
     console.log(`MCP Remnawave HTTP server listening on http://${HOST}:${PORT}`);
