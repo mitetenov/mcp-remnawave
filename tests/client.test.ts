@@ -6,7 +6,7 @@ function createClient(overrides?: { baseUrl?: string; apiToken?: string; apiKey?
         baseUrl: overrides?.baseUrl ?? 'https://panel.example.com',
         apiToken: overrides?.apiToken ?? 'test-token',
         apiKey: overrides?.apiKey,
-        readonly: false,
+        isSupport: false,
     });
 }
 
@@ -1396,7 +1396,7 @@ describe('RemnawaveClient', () => {
             const client = new RemnawaveClient({
                 baseUrl: '',
                 apiToken: '',
-                readonly: false,
+                isSupport: false,
             });
 
             await expect(client.getUsers()).rejects.toThrow(
