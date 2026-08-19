@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-20
 **Status:** approved, ready for implementation planning
-**Applies to:** mcp-remnawave 2.0.0 (branch `feat/remnawave-3x`)
+**Applies to:** mcp-remnawave 3.0.0 (branch `feat/remnawave-3x`)
 
 ## Problem
 
@@ -30,10 +30,13 @@ return panel internals. All are `kind: 'read'`, so readonly admits them.
 
 Replace the `readonly` boolean with `isSupport`, switching between two modes:
 
-- **full** (`isSupport: false`, the default) — no restrictions, all 178 tools,
-  4 resources, 5 prompts, responses untouched.
-- **support** (`isSupport: true`) — a fixed allowlist of 13 tools, 1 resource,
-  1 prompt, with VPN credentials stripped from every response.
+- **support** (`isSupport: true`, **the default**) — a fixed allowlist of 13
+  tools, 1 resource, 1 prompt, with VPN credentials stripped from every response.
+- **full** (`isSupport: false`) — no restrictions, all 178 tools, 4 resources,
+  5 prompts, responses untouched.
+
+Support is the default so that a deployment which forgets the flag ends up
+restricted rather than fully privileged.
 
 ## The support surface
 
@@ -171,11 +174,20 @@ place is safe — nothing else holds a reference to it.
 ### Configuration
 
 `Config.readonly: boolean` becomes `Config.isSupport: boolean`, read from
-`REMNAWAVE_IS_SUPPORT === 'true'`. `REMNAWAVE_READONLY` is removed outright:
-2.0.0 is unreleased on this branch, so there is nothing to keep compatible.
+`REMNAWAVE_IS_SUPPORT`. `REMNAWAVE_READONLY` is removed outright: 3.0.0 is
+unreleased on this branch, so there is nothing to keep compatible.
 
-The default stays `false` (full mode), matching the old default. A deployment
-that wants support mode must set the flag explicitly, and the README says so.
+**Parsing fails closed.** The flag guards an access boundary, so full mode
+requires the exact string `false`; anything else — unset, empty, `0`, a typo —
+yields support mode:
+
+```ts
+const isSupport = process.env.REMNAWAVE_IS_SUPPORT !== 'false';
+```
+
+This inverts the old `readonly` default deliberately. A deployment that wants
+unrestricted access must say so explicitly, and a misconfigured one degrades to
+the restricted surface instead of exposing the whole panel.
 
 ## Scope of change
 
@@ -189,8 +201,10 @@ that wants support mode must set the flag explicitly, and the README says so.
 | `src/tools/index.ts` | drop `readonly` from `registerAllTools` |
 | 16 tool modules | drop the `readonly` parameter and its early return |
 | `tests/readonly.test.ts` | replaced by `tests/support.test.ts` |
-| `README.md` | rewrite the mode section, both languages |
-| `.env.example`, `docker-compose.yml` | new variable |
+| `README.md` | rewrite the mode section, both languages; version 3.0.0 |
+| `.env.example`, `docker-compose.yml` | new variable, defaulting to support |
+| `package.json` | 2.0.0 → 3.0.0 |
+| `docs/remnawave-3-x-migration.md` | retitle to the 3.0.0 release |
 
 The four modules that never took `readonly` — `system.ts`, `subscriptions.ts`,
 `keygen.ts`, `bandwidth.ts` — need no signature change.
@@ -208,6 +222,8 @@ The four modules that never took `readonly` — `system.ts`, `subscriptions.ts`,
 - The client strips the three credential fields in support mode, including from
   nested objects and arrays, and keeps `subscriptionUrl`.
 - The client redacts nothing in full mode.
+- `loadConfig` fails closed: unset, empty, `'0'`, `'FALSE'` and `'true'` all
+  yield support mode; only the exact string `'false'` yields full mode.
 
 ## Out of scope
 
