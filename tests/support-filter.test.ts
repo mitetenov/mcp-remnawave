@@ -50,11 +50,24 @@ describe('restrictToSupport', () => {
         expect(promptSpy.mock.calls.map((call) => call[0])).toEqual(['user_audit']);
     });
 
-    it('forwards non-gated members without breaking private field access', () => {
-        const gated = restrictToSupport(makeServer());
+    it('forwards non-gated members with the target as receiver', () => {
+        class PrivateFieldHost {
+            #secret = 'kept';
 
-        // isConnected() reads McpServer internals. If the proxy forwarded
-        // property reads with itself as the receiver, this would throw.
-        expect(() => gated.isConnected()).not.toThrow();
+            get secret() {
+                return this.#secret;
+            }
+
+            tool(_name: string) {
+                return this;
+            }
+        }
+
+        const host = new PrivateFieldHost();
+        const gated = restrictToSupport(host as unknown as McpServer) as unknown as PrivateFieldHost;
+
+        // Reading a #private field through a proxy throws unless the get trap
+        // forwards `target` as the receiver when invoking property getters.
+        expect((gated as unknown as { secret: string }).secret).toBe('kept');
     });
 });

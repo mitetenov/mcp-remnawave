@@ -23,6 +23,11 @@ const GATED_METHODS: Record<string, ReadonlySet<string>> = {
  * Wraps a server so that registrations outside the support profile are dropped.
  * Registration modules see an ordinary McpServer and stay unaware of modes.
  *
+ * This is a blast-radius boundary for filtering registrations, not a containment
+ * boundary. Callers must not access the `.server` property on a restricted instance
+ * to bypass the allowlist — direct access to `.server.setRequestHandler()` bypasses
+ * all registration filtering. The actual security boundary is a scoped API token.
+ *
  * Skipped registrations return `undefined`, so callers must not use the return
  * value of a registration call.
  */
