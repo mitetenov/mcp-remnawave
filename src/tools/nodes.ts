@@ -134,7 +134,7 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
                 if (params.proxyUrl !== undefined)
                     body.proxyUrl = params.proxyUrl;
 
-                const result = await client.createNode(body as CreateNodeCommand.Request);
+                const result = await client.createNode(body as CreateNodeCommand.RequestBody);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);

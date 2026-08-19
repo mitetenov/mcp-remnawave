@@ -202,7 +202,7 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 if (params.verifyPeerCertByName !== undefined)
                     body.verifyPeerCertByName = params.verifyPeerCertByName;
 
-                const result = await client.createHost(body as CreateHostCommand.Request);
+                const result = await client.createHost(body as CreateHostCommand.RequestBody);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -311,7 +311,7 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                         ...(configProfileInboundUuid !== undefined ? { configProfileInboundUuid } : {}),
                     };
                 }
-                const result = await client.updateHost(body as UpdateHostCommand.Request);
+                const result = await client.updateHost(body as UpdateHostCommand.RequestBody);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);

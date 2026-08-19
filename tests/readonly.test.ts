@@ -4,7 +4,8 @@ import { RemnawaveClient } from '../src/client/index.js';
 import { registerUserTools } from '../src/tools/users.js';
 import { registerNodeTools } from '../src/tools/nodes.js';
 import { registerHostTools } from '../src/tools/hosts.js';
-import { registerIpControlTools } from '../src/tools/ip-control.js';
+import { registerConnectionTools } from '../src/tools/connections.js';
+import { registerNodeIntegrationTools } from '../src/tools/node-integrations.js';
 import { registerSquadTools } from '../src/tools/squads.js';
 import { registerHwidTools } from '../src/tools/hwid.js';
 import { registerApiTokenTools } from '../src/tools/api-tokens.js';
@@ -69,13 +70,20 @@ describe('readonly mode', () => {
         expect(readCount).toBeGreaterThan(0);
     });
 
-    it('IP control: registers read-only tools when readonly=true', () => {
-        const readCount = countTools(registerIpControlTools, true);
-        const writeCount = countTools(registerIpControlTools, false);
+    it('connections: registers read-only tools when readonly=true', () => {
+        const readCount = countTools(registerConnectionTools, true);
+        const writeCount = countTools(registerConnectionTools, false);
 
-        // IP control has 4 read tools and 1 write (drop_connections)
-        expect(readCount).toBe(4);
-        expect(writeCount).toBe(5);
+        // connections has 6 read tools and 1 write (connections_drop)
+        expect(readCount).toBe(6);
+        expect(writeCount).toBe(7);
+    });
+
+    it('node integrations: registers fewer tools in readonly mode', () => {
+        const readCount = countTools(registerNodeIntegrationTools, true);
+        const writeCount = countTools(registerNodeIntegrationTools, false);
+        expect(readCount).toBeLessThan(writeCount);
+        expect(readCount).toBeGreaterThan(0);
     });
 
     it('squads: registers fewer tools in readonly mode', () => {
