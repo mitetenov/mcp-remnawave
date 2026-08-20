@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { loadConfig, isConfigured } from '../src/config.js';
+import { loadConfig, isConfigured, DEFAULT_TIMEOUT_MS } from '../src/config.js';
 
 describe('loadConfig', () => {
     beforeEach(() => {
@@ -7,6 +7,7 @@ describe('loadConfig', () => {
         delete process.env.REMNAWAVE_API_TOKEN;
         delete process.env.REMNAWAVE_API_KEY;
         delete process.env.REMNAWAVE_IS_SUPPORT;
+        delete process.env.REMNAWAVE_TIMEOUT_MS;
     });
 
     it('returns empty baseUrl when REMNAWAVE_BASE_URL is missing', () => {
@@ -44,6 +45,30 @@ describe('loadConfig', () => {
         expect(config.apiToken).toBe('token123');
         expect(config.apiKey).toBe('key456');
         expect(config.isSupport).toBe(false);
+    });
+
+    it('defaults the request timeout when REMNAWAVE_TIMEOUT_MS is unset', () => {
+        process.env.REMNAWAVE_BASE_URL = 'https://panel.example.com';
+        process.env.REMNAWAVE_API_TOKEN = 'token123';
+        expect(loadConfig().timeoutMs).toBe(DEFAULT_TIMEOUT_MS);
+    });
+
+    it('reads a positive numeric timeout', () => {
+        process.env.REMNAWAVE_BASE_URL = 'https://panel.example.com';
+        process.env.REMNAWAVE_API_TOKEN = 'token123';
+        process.env.REMNAWAVE_TIMEOUT_MS = '5000';
+        expect(loadConfig().timeoutMs).toBe(5000);
+    });
+
+    it('falls back to the default rather than disabling the timeout on junk input', () => {
+        process.env.REMNAWAVE_BASE_URL = 'https://panel.example.com';
+        process.env.REMNAWAVE_API_TOKEN = 'token123';
+        for (const value of ['0', '-1', '', 'soon', 'NaN', 'Infinity']) {
+            process.env.REMNAWAVE_TIMEOUT_MS = value;
+            expect(loadConfig().timeoutMs, `value: ${JSON.stringify(value)}`).toBe(
+                DEFAULT_TIMEOUT_MS,
+            );
+        }
     });
 
     it('strips trailing slash from baseUrl', () => {

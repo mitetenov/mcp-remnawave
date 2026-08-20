@@ -68,7 +68,7 @@ import type {
     TestSrrMatcherCommand,
     GetNodeUsageCommand,
 } from '@remnawave/backend-contract';
-import { Config, isConfigured } from '../config.js';
+import { Config, DEFAULT_TIMEOUT_MS, isConfigured } from '../config.js';
 import { REDACTED_FIELDS } from '../support-profile.js';
 
 /**
@@ -100,11 +100,13 @@ export class RemnawaveClient {
     private headers: Record<string, string>;
     private configured: boolean;
     private isSupport: boolean;
+    private timeoutMs: number;
 
     constructor(config: Config) {
         this.baseUrl = config.baseUrl;
         this.configured = isConfigured(config);
         this.isSupport = config.isSupport;
+        this.timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
         this.headers = {
             Authorization: `Bearer ${config.apiToken}`,
             'Content-Type': 'application/json',
@@ -128,11 +130,27 @@ export class RemnawaveClient {
         const options: RequestInit = {
             method,
             headers: this.headers,
+            // Without this a stalled panel stalls the caller's tool call for
+            // as long as the connection stays open.
+            signal: AbortSignal.timeout(this.timeoutMs),
         };
         if (body !== undefined) {
             options.body = JSON.stringify(body);
         }
-        const res = await fetch(url, options);
+        let res: Response;
+        try {
+            res = await fetch(url, options);
+        } catch (e) {
+            // AbortSignal.timeout aborts with a TimeoutError whose message is
+            // just "The operation was aborted" — useless to whoever reads the
+            // tool result, so say what actually timed out.
+            if (e instanceof Error && e.name === 'TimeoutError') {
+                throw new Error(
+                    `Remnawave API timeout: ${method} ${path} did not respond within ${this.timeoutMs}ms`,
+                );
+            }
+            throw e;
+        }
         if (!res.ok) {
             let errorMessage: string;
             try {

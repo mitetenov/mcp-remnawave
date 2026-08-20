@@ -1496,6 +1496,51 @@ describe('RemnawaveClient', () => {
         });
     });
 
+    describe('request timeouts', () => {
+        it('passes an abort signal on every request', async () => {
+            const client = createClient();
+            const fetch = mockFetch({});
+            vi.stubGlobal('fetch', fetch);
+
+            await client.getUserById(1);
+
+            const [, options] = fetch.mock.calls[0] as [string, RequestInit];
+            expect(options.signal).toBeInstanceOf(AbortSignal);
+        });
+
+        it('reports which request timed out instead of "operation was aborted"', async () => {
+            const client = createClient();
+            const timeout = new Error('The operation was aborted');
+            timeout.name = 'TimeoutError';
+            vi.stubGlobal('fetch', vi.fn().mockRejectedValue(timeout));
+
+            await expect(client.getUserById(42)).rejects.toThrow(
+                /Remnawave API timeout: GET \/api\/users\/42 did not respond within 30000ms/,
+            );
+        });
+
+        it('honours a configured timeout in the message', async () => {
+            const client = new RemnawaveClient({
+                baseUrl: 'https://panel.example.com',
+                apiToken: 'test-token',
+                isSupport: false,
+                timeoutMs: 1234,
+            });
+            const timeout = new Error('The operation was aborted');
+            timeout.name = 'TimeoutError';
+            vi.stubGlobal('fetch', vi.fn().mockRejectedValue(timeout));
+
+            await expect(client.getUserById(1)).rejects.toThrow(/within 1234ms/);
+        });
+
+        it('does not swallow non-timeout network errors', async () => {
+            const client = createClient();
+            vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('ECONNREFUSED')));
+
+            await expect(client.getUserById(1)).rejects.toThrow('ECONNREFUSED');
+        });
+    });
+
     describe('support-mode redaction', () => {
         const userPayload = () => ({
             response: {
