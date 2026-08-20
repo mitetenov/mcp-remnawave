@@ -445,20 +445,23 @@ describe('RemnawaveClient', () => {
             ]);
         });
 
-        it('restartNode sends POST', async () => {
+        it('restartNode sends POST with forceRestart in the body', async () => {
             const client = createClient();
             const fetch = mockFetch({});
             vi.stubGlobal('fetch', fetch);
 
-            await client.restartNode('node-1');
+            await client.restartNode('node-1', false);
 
             expect(fetch).toHaveBeenCalledWith(
                 expect.stringContaining('/api/nodes/node-1/actions/restart'),
                 expect.objectContaining({ method: 'POST' }),
             );
+            const [, options] = fetch.mock.calls[0] as [string, RequestInit];
+            const body = JSON.parse(options.body as string);
+            expect(body.forceRestart).toBe(false);
         });
 
-        it('restartNode with forceRestart sends body', async () => {
+        it('restartNode with forceRestart true sends body', async () => {
             const client = createClient();
             const fetch = mockFetch({});
             vi.stubGlobal('fetch', fetch);
@@ -470,20 +473,23 @@ describe('RemnawaveClient', () => {
             expect(body.forceRestart).toBe(true);
         });
 
-        it('restartAllNodes sends POST', async () => {
+        it('restartAllNodes sends POST with forceRestart in the body', async () => {
             const client = createClient();
             const fetch = mockFetch({});
             vi.stubGlobal('fetch', fetch);
 
-            await client.restartAllNodes();
+            await client.restartAllNodes(false);
 
             expect(fetch).toHaveBeenCalledWith(
                 expect.stringContaining('/api/nodes/actions/restart-all'),
                 expect.objectContaining({ method: 'POST' }),
             );
+            const [, options] = fetch.mock.calls[0] as [string, RequestInit];
+            const body = JSON.parse(options.body as string);
+            expect(body.forceRestart).toBe(false);
         });
 
-        it('restartAllNodes with forceRestart sends body', async () => {
+        it('restartAllNodes with forceRestart true sends body', async () => {
             const client = createClient();
             const fetch = mockFetch({});
             vi.stubGlobal('fetch', fetch);
@@ -674,7 +680,7 @@ describe('RemnawaveClient', () => {
             expect(body.uuids).toEqual(['a']);
         });
 
-        it('bulkSetHostInbound sends correct body', async () => {
+        it('bulkSetHostInbound sends PATCH with correct body', async () => {
             const client = createClient();
             const fetch = mockFetch({});
             vi.stubGlobal('fetch', fetch);
@@ -686,9 +692,24 @@ describe('RemnawaveClient', () => {
             });
 
             const [, options] = fetch.mock.calls[0] as [string, RequestInit];
+            expect(options.method).toBe('PATCH');
             const body = JSON.parse(options.body as string);
             expect(body.uuids).toEqual(['a']);
             expect(body.configProfileUuid).toBe('prof-1');
+        });
+
+        it('bulkSetHostPort sends PATCH with correct body', async () => {
+            const client = createClient();
+            const fetch = mockFetch({});
+            vi.stubGlobal('fetch', fetch);
+
+            await client.bulkSetHostPort({ uuids: ['a'], port: 8443 });
+
+            const [, options] = fetch.mock.calls[0] as [string, RequestInit];
+            expect(options.method).toBe('PATCH');
+            const body = JSON.parse(options.body as string);
+            expect(body.uuids).toEqual(['a']);
+            expect(body.port).toBe(8443);
         });
     });
 
@@ -801,6 +822,22 @@ describe('RemnawaveClient', () => {
                 expect.stringContaining('/api/system/stats/bandwidth'),
                 expect.objectContaining({ method: 'GET' }),
             );
+        });
+
+        it('getStatsDigest sends the required start and end query parameters', async () => {
+            const client = createClient();
+            const fetch = mockFetch({});
+            vi.stubGlobal('fetch', fetch);
+
+            await client.getStatsDigest({
+                start: '2026-07-15T00:00:00Z',
+                end: '2026-07-16T00:00:00Z',
+            });
+
+            const [url] = fetch.mock.calls[0] as [string];
+            expect(url).toContain('/api/system/stats/digest');
+            expect(url).toContain('start=2026-07-15T00%3A00%3A00Z');
+            expect(url).toContain('end=2026-07-16T00%3A00%3A00Z');
         });
     });
 
@@ -1173,7 +1210,7 @@ describe('RemnawaveClient', () => {
             );
         });
 
-        it('truncateTorrentBlockerReports sends POST', async () => {
+        it('truncateTorrentBlockerReports sends DELETE', async () => {
             const client = createClient();
             const fetch = mockFetch({});
             vi.stubGlobal('fetch', fetch);
@@ -1182,7 +1219,7 @@ describe('RemnawaveClient', () => {
 
             expect(fetch).toHaveBeenCalledWith(
                 expect.stringContaining('/api/node-plugins/torrent-blocker/truncate'),
-                expect.objectContaining({ method: 'POST' }),
+                expect.objectContaining({ method: 'DELETE' }),
             );
         });
     });
@@ -1270,7 +1307,7 @@ describe('RemnawaveClient', () => {
             );
         });
 
-        it('upsertNodeMetadata sends PUT', async () => {
+        it('upsertNodeMetadata sends PUT with the body wrapped in a metadata field', async () => {
             const client = createClient();
             const fetch = mockFetch({});
             vi.stubGlobal('fetch', fetch);
@@ -1280,7 +1317,7 @@ describe('RemnawaveClient', () => {
             const [, options] = fetch.mock.calls[0] as [string, RequestInit];
             expect(options.method).toBe('PUT');
             const body = JSON.parse(options.body as string);
-            expect(body.key).toBe('value');
+            expect(body).toEqual({ metadata: { key: 'value' } });
         });
 
         it('getUserMetadata constructs correct URL', async () => {
@@ -1295,6 +1332,19 @@ describe('RemnawaveClient', () => {
                 expect.objectContaining({ method: 'GET' }),
             );
         });
+
+        it('upsertUserMetadata sends PUT with the body wrapped in a metadata field', async () => {
+            const client = createClient();
+            const fetch = mockFetch({});
+            vi.stubGlobal('fetch', fetch);
+
+            await client.upsertUserMetadata(7, { region: 'eu' });
+
+            const [, options] = fetch.mock.calls[0] as [string, RequestInit];
+            expect(options.method).toBe('PUT');
+            const body = JSON.parse(options.body as string);
+            expect(body).toEqual({ metadata: { region: 'eu' } });
+        });
     });
 
     // ── Bandwidth Stats Methods ───────────────────────────────────
@@ -1305,12 +1355,24 @@ describe('RemnawaveClient', () => {
             const fetch = mockFetch([]);
             vi.stubGlobal('fetch', fetch);
 
-            await client.getNodesBandwidth();
+            await client.getNodesBandwidth({ start: '2026-07-01', end: '2026-07-31' });
 
             expect(fetch).toHaveBeenCalledWith(
                 expect.stringContaining('/api/bandwidth-stats/nodes'),
                 expect.objectContaining({ method: 'GET' }),
             );
+        });
+
+        it('getNodesBandwidth sends the required start and end query parameters', async () => {
+            const client = createClient();
+            const fetch = mockFetch([]);
+            vi.stubGlobal('fetch', fetch);
+
+            await client.getNodesBandwidth({ start: '2026-07-01', end: '2026-07-31' });
+
+            const [url] = fetch.mock.calls[0] as [string];
+            expect(url).toContain('start=2026-07-01');
+            expect(url).toContain('end=2026-07-31');
         });
 
         it('getNodesRealtimeBandwidth constructs correct URL', async () => {
@@ -1331,12 +1393,24 @@ describe('RemnawaveClient', () => {
             const fetch = mockFetch({});
             vi.stubGlobal('fetch', fetch);
 
-            await client.getUserBandwidthByUserId(7);
+            await client.getUserBandwidthByUserId(7, { start: '2026-07-01', end: '2026-07-31' });
 
             expect(fetch).toHaveBeenCalledWith(
                 expect.stringContaining('/api/bandwidth-stats/users/7'),
                 expect.objectContaining({ method: 'GET' }),
             );
+        });
+
+        it('getUserBandwidthByUserId sends the required start and end query parameters', async () => {
+            const client = createClient();
+            const fetch = mockFetch({});
+            vi.stubGlobal('fetch', fetch);
+
+            await client.getUserBandwidthByUserId(7, { start: '2026-07-01', end: '2026-07-31' });
+
+            const [url] = fetch.mock.calls[0] as [string];
+            expect(url).toContain('start=2026-07-01');
+            expect(url).toContain('end=2026-07-31');
         });
     });
 
@@ -1484,6 +1558,39 @@ describe('RemnawaveClient', () => {
 
             expect(result.response.users[0].trojanPassword).toBe('trojan-secret');
             expect(result.response.users[0].userTraffic.vlessUuid).toBe('nested-secret');
+        });
+
+        it('strips links and ssConfLinks from a SubscriptionInfoSchema-shaped payload, keeps subscriptionUrl', async () => {
+            const client = new RemnawaveClient({
+                baseUrl: 'https://panel.example.com',
+                apiToken: 'test-token',
+                isSupport: true,
+            });
+            const subscriptionInfoPayload = {
+                isFound: true,
+                user: { username: 'vasya', shortUuid: 'abc-123' },
+                links: [
+                    'vless://11111111-2222-3333-4444-555555555555@host:443?type=tcp',
+                ],
+                ssConfLinks: {
+                    default: 'ss://base64-payload-with-ss-secret@host:443',
+                },
+                subscriptionUrl: 'https://panel.example.com/sub/abc',
+            };
+            vi.stubGlobal('fetch', mockFetch(subscriptionInfoPayload));
+
+            const result = (await client.getSubscriptionInfo('abc-123')) as Record<
+                string,
+                any
+            >;
+
+            expect(result.links).toBeUndefined();
+            expect(result.ssConfLinks).toBeUndefined();
+            expect(result.subscriptionUrl).toBe(
+                'https://panel.example.com/sub/abc',
+            );
+            expect(result.isFound).toBe(true);
+            expect(result.user).toEqual({ username: 'vasya', shortUuid: 'abc-123' });
         });
     });
 });

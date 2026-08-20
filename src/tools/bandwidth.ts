@@ -4,8 +4,11 @@ import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
 export function registerBandwidthTools(server: McpServer, client: RemnawaveClient) {
-    server.tool('bandwidth_nodes_list', 'Get bandwidth usage per node', {}, async () => {
-        try { return toolResult(await client.getNodesBandwidth()); } catch (e) { return toolError(e); }
+    server.tool('bandwidth_nodes_list', 'Get bandwidth usage per node', {
+        start: z.string().describe('Start date (YYYY-MM-DD)'),
+        end: z.string().describe('End date (YYYY-MM-DD)'),
+    }, async ({ start, end }) => {
+        try { return toolResult(await client.getNodesBandwidth({ start, end })); } catch (e) { return toolError(e); }
     });
 
     server.tool('bandwidth_nodes_realtime', 'Get realtime bandwidth usage per node', {}, async () => {
@@ -14,8 +17,10 @@ export function registerBandwidthTools(server: McpServer, client: RemnawaveClien
 
     server.tool('bandwidth_user_usage', 'Get bandwidth usage for a single user', {
         userId: z.number().describe('User ID'),
-    }, async ({ userId }) => {
-        try { return toolResult(await client.getUserBandwidthByUserId(userId)); } catch (e) { return toolError(e); }
+        start: z.string().describe('Start date (YYYY-MM-DD)'),
+        end: z.string().describe('End date (YYYY-MM-DD)'),
+    }, async ({ userId, start, end }) => {
+        try { return toolResult(await client.getUserBandwidthByUserId(userId, { start, end })); } catch (e) { return toolError(e); }
     });
 
     server.tool(

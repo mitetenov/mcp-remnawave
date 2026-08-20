@@ -30,12 +30,23 @@ export const SUPPORT_RESOURCES: ReadonlySet<string> = new Set(['user-details']);
 export const SUPPORT_PROMPTS: ReadonlySet<string> = new Set(['user_audit']);
 
 /**
- * Working VPN credentials. Stripped from every panel response in support mode,
- * so an ordinary user lookup cannot place them in the LLM context.
+ * Working VPN credentials, and the collections that carry them as URIs.
+ * Stripped from every panel response in support mode, so an ordinary user or
+ * subscription lookup cannot place them in the LLM context.
+ *
+ * `trojanPassword`, `ssPassword` and `vlessUuid` are the scalar credential
+ * fields on user records. `links` (string[]) and `ssConfLinks`
+ * (Record<string,string>) are `SubscriptionInfoSchema` fields whose values
+ * are `vless://`, `trojan://` and `ss://` URIs embedding those same
+ * credentials — deleting the three scalar keys does not remove them, so the
+ * two collections are deleted wholesale instead.
+ *
  * `subscriptionUrl` is deliberately absent: the bot hands out that link.
  */
 export const REDACTED_FIELDS: readonly string[] = [
     'trojanPassword',
     'ssPassword',
     'vlessUuid',
+    'links',
+    'ssConfLinks',
 ];

@@ -251,8 +251,7 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient) {
             uuid: z.string().describe('Node UUID'),
             forceRestart: z
                 .boolean()
-                .optional()
-                .describe('Force restart (required in Remnawave 2.8+)'),
+                .describe('Force restart (required by the panel)'),
         },
         async ({ uuid, forceRestart }) => {
             try {
@@ -270,8 +269,7 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient) {
         {
             forceRestart: z
                 .boolean()
-                .optional()
-                .describe('Force restart (required in Remnawave 2.8+)'),
+                .describe('Force restart (required by the panel)'),
         },
         async ({ forceRestart }) => {
             try {

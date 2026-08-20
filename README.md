@@ -15,7 +15,7 @@ MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing
 ### Features
 
 - **178 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, node integrations, shared lists, connections, bandwidth stats, and metadata
-- **3 resources** — real-time panel stats, node status, health checks
+- **4 resources** — real-time panel stats, node status, health checks, user details
 - **5 prompts** — guided workflows for common tasks
 - **Support mode (default)** — restrict to 13 user-facing tools with credentials stripped, for support bots
 - **Caddy support** — `X-Api-Key` header for panels behind Caddy with custom path
@@ -518,7 +518,7 @@ MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), п
 ### Возможности
 
 - **178 инструментов** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, интеграциями нод, общими списками, соединениями, статистикой трафика и метаданными
-- **3 ресурса** — статистика панели, статус нод, проверка здоровья в реальном времени
+- **4 ресурса** — статистика панели, статус нод, проверка здоровья, данные пользователя в реальном времени
 - **5 промптов** — пошаговые сценарии для типичных задач
 - **Режим support (по умолчанию)** — 13 пользовательских инструментов с вырезанными кредами, для саппорт-ботов
 - **Поддержка Caddy** — заголовок `X-Api-Key` для панелей за Caddy с кастомным путём

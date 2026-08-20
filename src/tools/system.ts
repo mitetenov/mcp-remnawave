@@ -137,10 +137,17 @@ export function registerSystemTools(
     server.tool(
         'system_stats_digest',
         'Get a digest of system statistics',
-        {},
-        async () => {
+        {
+            start: z
+                .string()
+                .describe('Start of the period, ISO 8601 with timezone offset (e.g. 2026-07-15T00:00:00Z)'),
+            end: z
+                .string()
+                .describe('End of the period, ISO 8601 with timezone offset (e.g. 2026-07-15T00:00:00Z)'),
+        },
+        async ({ start, end }) => {
             try {
-                const result = await client.getStatsDigest();
+                const result = await client.getStatsDigest({ start, end });
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);

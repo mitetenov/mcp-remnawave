@@ -332,18 +332,12 @@ export class RemnawaveClient {
         return this.post(REST_API.NODES.ACTIONS.DISABLE(uuid));
     }
 
-    async restartNode(uuid: string, forceRestart?: boolean) {
-        return this.post(
-            REST_API.NODES.ACTIONS.RESTART(uuid),
-            forceRestart === undefined ? undefined : { forceRestart },
-        );
+    async restartNode(uuid: string, forceRestart: boolean) {
+        return this.post(REST_API.NODES.ACTIONS.RESTART(uuid), { forceRestart });
     }
 
-    async restartAllNodes(forceRestart?: boolean) {
-        return this.post(
-            REST_API.NODES.ACTIONS.RESTART_ALL,
-            forceRestart === undefined ? undefined : { forceRestart },
-        );
+    async restartAllNodes(forceRestart: boolean) {
+        return this.post(REST_API.NODES.ACTIONS.RESTART_ALL, { forceRestart });
     }
 
     async resetNodeTraffic(uuid: string) {
@@ -405,11 +399,11 @@ export class RemnawaveClient {
     }
 
     async bulkSetHostInbound(params: UpdateManyHostsCommand.RequestBody) {
-        return this.post(REST_API.HOSTS.BULK.UPDATE, params);
+        return this.patch(REST_API.HOSTS.BULK.UPDATE, params);
     }
 
     async bulkSetHostPort(params: UpdateManyHostsCommand.RequestBody) {
-        return this.post(REST_API.HOSTS.BULK.UPDATE, params);
+        return this.patch(REST_API.HOSTS.BULK.UPDATE, params);
     }
 
     // System
@@ -434,8 +428,10 @@ export class RemnawaveClient {
         return this.get(REST_API.SYSTEM.STATS.RECAP);
     }
 
-    async getStatsDigest() {
-        return this.get(REST_API.SYSTEM.STATS.DIGEST);
+    async getStatsDigest(query: { start: string; end: string }) {
+        return this.get(
+            `${REST_API.SYSTEM.STATS.DIGEST}${RemnawaveClient.query(query)}`,
+        );
     }
 
     async getHttpStats() {
@@ -630,17 +626,22 @@ export class RemnawaveClient {
 
     // Bandwidth Stats
 
-    async getNodesBandwidth() {
-        return this.get(REST_API.BANDWIDTH_STATS.NODES.GET);
+    async getNodesBandwidth(query: { start: string; end: string }) {
+        return this.get(
+            `${REST_API.BANDWIDTH_STATS.NODES.GET}${RemnawaveClient.query(query)}`,
+        );
     }
 
     async getNodesRealtimeBandwidth() {
         return this.get(REST_API.BANDWIDTH_STATS.NODES.GET_REALTIME);
     }
 
-    async getUserBandwidthByUserId(userId: number) {
+    async getUserBandwidthByUserId(
+        userId: number,
+        query: { start: string; end: string },
+    ) {
         return this.get(
-            REST_API.BANDWIDTH_STATS.USERS.GET_BY_ID(String(userId)),
+            `${REST_API.BANDWIDTH_STATS.USERS.GET_BY_ID(String(userId))}${RemnawaveClient.query(query)}`,
         );
     }
 
@@ -906,7 +907,7 @@ export class RemnawaveClient {
     }
 
     async truncateTorrentBlockerReports() {
-        return this.post(REST_API.NODE_PLUGINS.TORRENT_BLOCKER.TRUNCATE_REPORTS);
+        return this.delete(REST_API.NODE_PLUGINS.TORRENT_BLOCKER.TRUNCATE_REPORTS);
     }
 
     // Node Plugins / Shared Lists
@@ -996,7 +997,7 @@ export class RemnawaveClient {
     }
 
     async upsertNodeMetadata(uuid: string, params: Record<string, unknown>) {
-        return this.put(REST_API.METADATA.NODE.UPSERT(uuid), params);
+        return this.put(REST_API.METADATA.NODE.UPSERT(uuid), { metadata: params });
     }
 
     async getUserMetadata(userId: number) {
@@ -1004,6 +1005,8 @@ export class RemnawaveClient {
     }
 
     async upsertUserMetadata(userId: number, params: Record<string, unknown>) {
-        return this.put(REST_API.METADATA.USER.UPSERT(String(userId)), params);
+        return this.put(REST_API.METADATA.USER.UPSERT(String(userId)), {
+            metadata: params,
+        });
     }
 }
