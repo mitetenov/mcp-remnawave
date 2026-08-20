@@ -68,10 +68,12 @@ The `X-Api-Key` header will be added to every request automatically.
 The server runs in one of two modes.
 
 **Support mode is the default.** It exposes 13 user-facing tools, 1 resource and
-1 prompt, and strips `trojanPassword`, `ssPassword` and `vlessUuid` from every
-panel response. The only mutating operation is removing HWID devices, which is
-safe: a device re-registers on the next connect. Intended for support bots that
-act on behalf of an end user.
+1 prompt, and strips `trojanPassword`, `ssPassword`, `vlessUuid`, `links` and
+`ssConfLinks` from every panel response — the scalar credential fields and the
+`vless://`/`trojan://`/`ss://` URI collections that embed them. `subscriptionUrl`
+is left intact, since handing out that link is the bot's job. The only mutating
+operation is removing HWID devices, which is safe: a device re-registers on the
+next connect. Intended for support bots that act on behalf of an end user.
 
 **Full mode** has no restrictions: all 178 tools, 4 resources, 5 prompts, and
 untouched responses. Enable it with `REMNAWAVE_IS_SUPPORT=false`.
@@ -572,10 +574,12 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 
 **Support — режим по умолчанию.** Открыто 13 пользовательских инструментов,
 1 ресурс и 1 промпт, а из каждого ответа панели вырезаются `trojanPassword`,
-`ssPassword` и `vlessUuid`. Единственная операция записи — удаление
-HWID-устройств; она безопасна, устройство снова появится при следующем
-подключении. Режим рассчитан на саппорт-ботов, действующих от имени
-пользователя.
+`ssPassword`, `vlessUuid`, `links` и `ssConfLinks` — скалярные поля с
+учётными данными и коллекции ссылок `vless://`/`trojan://`/`ss://`, в которые
+эти же данные встроены. `subscriptionUrl` остаётся нетронутым: выдавать эту
+ссылку — задача бота. Единственная операция записи — удаление HWID-устройств;
+она безопасна, устройство снова появится при следующем подключении. Режим
+рассчитан на саппорт-ботов, действующих от имени пользователя.
 
 **Full — без ограничений:** все 178 инструментов, 4 ресурса, 5 промптов,
 ответы не трогаются. Включается через `REMNAWAVE_IS_SUPPORT=false`.

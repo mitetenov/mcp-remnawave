@@ -70,4 +70,27 @@ describe('restrictToSupport', () => {
         // forwards `target` as the receiver when invoking property getters.
         expect((gated as unknown as { secret: string }).secret).toBe('kept');
     });
+
+    it('binds forwarded non-gated methods to the target', () => {
+        class PrivateFieldHost {
+            #secret = 'kept';
+
+            tool(_name: string) {
+                return this;
+            }
+
+            readSecret() {
+                return this.#secret;
+            }
+        }
+
+        const host = new PrivateFieldHost();
+        const gated = restrictToSupport(host as unknown as McpServer) as unknown as PrivateFieldHost;
+
+        // `readSecret` is not one of the six gated method names, so it takes
+        // the `.bind(target)` path. Without that bind, calling it through the
+        // proxy would run with `this` set to the proxy, and the `#secret`
+        // read inside would throw.
+        expect(gated.readSecret()).toBe('kept');
+    });
 });
