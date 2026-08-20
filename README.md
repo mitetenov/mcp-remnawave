@@ -10,14 +10,14 @@
 
 MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing LLM clients (Claude Desktop, Cursor, Windsurf, etc.) with tools to manage a [Remnawave](https://github.com/remnawave/) VPN panel.
 
-**Version:** 3.0.0 | **Remnawave panel:** 3.3.x (API contract 3.4.x)
+**Version:** 3.2.0 | **Remnawave panel:** 3.3.x (API contract 3.4.x)
 
 ### Features
 
-- **178 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, node integrations, shared lists, connections, bandwidth stats, and metadata
+- **179 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, node integrations, shared lists, connections, bandwidth stats, and metadata
 - **4 resources** — real-time panel stats, node status, health checks, user details
 - **5 prompts** — guided workflows for common tasks
-- **Support mode (default)** — restrict to 15 user-facing tools with credentials stripped, for support bots
+- **Support mode (default)** — restrict to 16 user-facing tools with credentials stripped, for support bots
 - **Caddy support** — `X-Api-Key` header for panels behind Caddy with custom path
 - **Type-safe** — built on [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) for API route validation
 - **stdio transport** — works with Claude Desktop, Cursor, Windsurf, and any MCP-compatible client
@@ -68,15 +68,24 @@ The `X-Api-Key` header will be added to every request automatically.
 
 The server runs in one of two modes.
 
-**Support mode is the default.** It exposes 15 user-facing tools, 1 resource and
-1 prompt, and strips `trojanPassword`, `ssPassword`, `vlessUuid`, `links` and
-`ssConfLinks` from every panel response — the scalar credential fields and the
-`vless://`/`trojan://`/`ss://` URI collections that embed them. `subscriptionUrl`
-is left intact, since handing out that link is the bot's job. The only mutating
-operation is removing HWID devices, which is safe: a device re-registers on the
-next connect. Intended for support bots that act on behalf of an end user.
+**Support mode is the default.** It exposes 16 user-facing tools, 1 resource and
+1 prompt, and redacts two groups of fields from every panel response.
 
-**Full mode** has no restrictions: all 178 tools, 4 resources, 5 prompts, and
+*Credentials:* `trojanPassword`, `ssPassword`, `vlessUuid`, `links` and
+`ssConfLinks` — the scalar credential fields and the
+`vless://`/`trojan://`/`ss://` URI collections that embed them. `subscriptionUrl`
+is left intact, since handing out that link is the bot's job.
+
+*Node infrastructure:* `address`, `ips`, `port`, `proxyUrl`, `note`, `provider`,
+`system` and `rawInbound`. A user asking whether their server is up needs
+`name`, `countryCode`, `isConnected` and `isDisabled`; the rest is operator
+detail, down to the raw xray inbound that holds reality private keys.
+
+The only mutating operation is removing HWID devices, which is safe: a device
+re-registers on the next connect. Intended for support bots that act on behalf
+of an end user.
+
+**Full mode** has no restrictions: all 179 tools, 4 resources, 5 prompts, and
 untouched responses. Enable it with `REMNAWAVE_IS_SUPPORT=false`.
 
 The flag is parsed fail-closed — only the exact string `false` unlocks full
@@ -86,11 +95,11 @@ Tools available in support mode:
 
 | Category | Tools |
 |----------|-------|
-| User lookup (4) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid` |
+| User lookup (5) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id` |
 | Subscription (4) | `subscriptions_get_by_user_id`, `subscriptions_get_by_username`, `subscriptions_get_by_short_uuid`, `subscription_info` |
 | Access and usage (2) | `users_accessible_nodes`, `bandwidth_user_usage` |
 | Devices (3) | `hwid_devices_list`, `hwid_device_delete`, `hwid_devices_delete_all` |
-| Server status (2) | `nodes_list`, `nodes_get` |
+| Server status (2) | `nodes_list`, `nodes_get` — infrastructure fields redacted |
 
 Resource: `remnawave://users/{userId}`. Prompt: `user_audit`.
 
@@ -150,9 +159,13 @@ docker compose up -d
 
 Environment variables are passed via `.env` file or `docker-compose.yml`.
 
+The container runs the HTTP transport (`dist/http-index.js`) on port 3100. MCP
+itself is POST-only on `/`; `GET /health` answers `200 {"status":"ok"}` and is
+there for container health checks.
+
 ### Available Tools
 
-#### Users (25 tools)
+#### Users (26 tools)
 
 Users are addressed by their numeric `userId` — the panel dropped user UUIDs in 3.x.
 
@@ -162,6 +175,7 @@ Users are addressed by their numeric `userId` — the panel dropped user UUIDs i
 | `users_get` | Get user by numeric ID | read |
 | `users_get_by_username` | Get user by username | read |
 | `users_get_by_short_uuid` | Get user by short UUID | read |
+| `users_get_by_telegram_id` | Get users by Telegram ID (returns a list) | read |
 | `users_accessible_nodes` | List nodes the user can connect to | read |
 | `users_tags_list` | List all user tags | read |
 | `users_resolve` | Resolve a user by ID, short UUID or username | read |
@@ -472,6 +486,8 @@ Replaces the `ip_control_*` tools removed in Remnawave 3.x.
 ```
 src/
 ├── index.ts                       # Entry point (stdio transport)
+├── http-index.ts                  # Entry point (HTTP transport)
+├── http-handler.ts                # HTTP routing: MCP endpoint + /health
 ├── server.ts                      # McpServer setup
 ├── config.ts                      # Environment config
 ├── client/
@@ -479,7 +495,7 @@ src/
 ├── tools/
 │   ├── helpers.ts                 # Result formatting helpers
 │   ├── index.ts                   # Tool registration
-│   ├── users.ts                   # User management (25 tools)
+│   ├── users.ts                   # User management (26 tools)
 │   ├── node-plugins.ts            # Node plugins & shared lists (18 tools)
 │   ├── nodes.ts                   # Node management (15 tools)
 │   ├── system.ts                  # System & auth (13 tools)
@@ -517,14 +533,14 @@ MIT
 
 MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), предоставляющий LLM-клиентам (Claude Desktop, Cursor, Windsurf и др.) инструменты для управления VPN-панелью [Remnawave](https://github.com/remnawave/).
 
-**Версия:** 3.0.0 | **Панель Remnawave:** 3.3.x (контракт API 3.4.x)
+**Версия:** 3.2.0 | **Панель Remnawave:** 3.3.x (контракт API 3.4.x)
 
 ### Возможности
 
-- **178 инструментов** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, интеграциями нод, общими списками, соединениями, статистикой трафика и метаданными
+- **179 инструментов** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, интеграциями нод, общими списками, соединениями, статистикой трафика и метаданными
 - **4 ресурса** — статистика панели, статус нод, проверка здоровья, данные пользователя в реальном времени
 - **5 промптов** — пошаговые сценарии для типичных задач
-- **Режим support (по умолчанию)** — 15 пользовательских инструментов с вырезанными кредами, для саппорт-ботов
+- **Режим support (по умолчанию)** — 16 пользовательских инструментов с вырезанными кредами, для саппорт-ботов
 - **Поддержка Caddy** — заголовок `X-Api-Key` для панелей за Caddy с кастомным путём
 - **Type-safe** — построен на [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) для валидации API-маршрутов
 - **stdio транспорт** — работает с Claude Desktop, Cursor, Windsurf и любым MCP-совместимым клиентом
@@ -575,16 +591,24 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 
 Сервер работает в одном из двух режимов.
 
-**Support — режим по умолчанию.** Открыто 15 пользовательских инструментов,
-1 ресурс и 1 промпт, а из каждого ответа панели вырезаются `trojanPassword`,
-`ssPassword`, `vlessUuid`, `links` и `ssConfLinks` — скалярные поля с
-учётными данными и коллекции ссылок `vless://`/`trojan://`/`ss://`, в которые
-эти же данные встроены. `subscriptionUrl` остаётся нетронутым: выдавать эту
-ссылку — задача бота. Единственная операция записи — удаление HWID-устройств;
-она безопасна, устройство снова появится при следующем подключении. Режим
-рассчитан на саппорт-ботов, действующих от имени пользователя.
+**Support — режим по умолчанию.** Открыто 16 пользовательских инструментов,
+1 ресурс и 1 промпт, а из каждого ответа панели вырезаются две группы полей.
 
-**Full — без ограничений:** все 178 инструментов, 4 ресурса, 5 промптов,
+*Учётные данные:* `trojanPassword`, `ssPassword`, `vlessUuid`, `links` и
+`ssConfLinks` — скалярные поля и коллекции ссылок
+`vless://`/`trojan://`/`ss://`, в которые эти же данные встроены.
+`subscriptionUrl` остаётся нетронутым: выдавать эту ссылку — задача бота.
+
+*Инфраструктура нод:* `address`, `ips`, `port`, `proxyUrl`, `note`, `provider`,
+`system` и `rawInbound`. Пользователю, который спрашивает «работает ли мой
+сервер», нужны `name`, `countryCode`, `isConnected` и `isDisabled`; остальное —
+операторские детали вплоть до сырого xray-inbound с приватными ключами reality.
+
+Единственная операция записи — удаление HWID-устройств; она безопасна,
+устройство снова появится при следующем подключении. Режим рассчитан на
+саппорт-ботов, действующих от имени пользователя.
+
+**Full — без ограничений:** все 179 инструментов, 4 ресурса, 5 промптов,
 ответы не трогаются. Включается через `REMNAWAVE_IS_SUPPORT=false`.
 
 Флаг разбирается fail-closed: полный режим включает только точная строка
@@ -595,11 +619,11 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 
 | Категория | Инструменты |
 |-----------|-------------|
-| Поиск пользователя (4) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid` |
+| Поиск пользователя (5) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id` |
 | Подписка (4) | `subscriptions_get_by_user_id`, `subscriptions_get_by_username`, `subscriptions_get_by_short_uuid`, `subscription_info` |
 | Доступ и расход (2) | `users_accessible_nodes`, `bandwidth_user_usage` |
 | Устройства (3) | `hwid_devices_list`, `hwid_device_delete`, `hwid_devices_delete_all` |
-| Статус серверов (2) | `nodes_list`, `nodes_get` |
+| Статус серверов (2) | `nodes_list`, `nodes_get` — инфраструктурные поля вырезаны |
 
 Ресурс: `remnawave://users/{userId}`. Промпт: `user_audit`.
 
@@ -659,9 +683,13 @@ docker compose up -d
 
 Переменные окружения передаются через `.env` файл или `docker-compose.yml`.
 
+В контейнере поднимается HTTP-транспорт (`dist/http-index.js`) на порту 3100.
+Сам MCP отвечает только на POST `/`; `GET /health` возвращает
+`200 {"status":"ok"}` — для healthcheck'ов контейнера.
+
 ### Доступные инструменты
 
-#### Пользователи (25 инструментов)
+#### Пользователи (26 инструментов)
 
 Пользователь адресуется числовым `userId` — в 3.x панель отказалась от UUID пользователей.
 
@@ -671,6 +699,7 @@ docker compose up -d
 | `users_get` | Получить пользователя по числовому ID | read |
 | `users_get_by_username` | Получить пользователя по username | read |
 | `users_get_by_short_uuid` | Получить пользователя по short UUID | read |
+| `users_get_by_telegram_id` | Получить пользователей по Telegram ID (список) | read |
 | `users_accessible_nodes` | Ноды, доступные пользователю | read |
 | `users_tags_list` | Список тегов пользователей | read |
 | `users_resolve` | Найти пользователя по ID, short UUID или username | read |
@@ -981,6 +1010,8 @@ docker compose up -d
 ```
 src/
 ├── index.ts                       # Точка входа (stdio транспорт)
+├── http-index.ts                  # Точка входа (HTTP транспорт)
+├── http-handler.ts                # HTTP-роутинг: MCP-эндпоинт + /health
 ├── server.ts                      # Настройка McpServer
 ├── config.ts                      # Конфигурация окружения
 ├── client/
@@ -988,7 +1019,7 @@ src/
 ├── tools/
 │   ├── helpers.ts                 # Хелперы форматирования
 │   ├── index.ts                   # Регистрация инструментов
-│   ├── users.ts                   # Управление пользователями (25)
+│   ├── users.ts                   # Управление пользователями (26)
 │   ├── node-plugins.ts            # Плагины нод и общие списки (18)
 │   ├── nodes.ts                   # Управление нодами (15)
 │   ├── system.ts                  # Система и авторизация (13)

@@ -13,6 +13,9 @@ export const SUPPORT_TOOLS: ReadonlySet<string> = new Set([
     'users_get',
     'users_get_by_username',
     'users_get_by_short_uuid',
+    // The support bot's entry point: it knows the sender's Telegram ID and
+    // nothing else, and panel 3.x dropped `GET /api/users/by-telegram-id`.
+    'users_get_by_telegram_id',
     'users_accessible_nodes',
     'subscriptions_get_by_user_id',
     'subscriptions_get_by_username',
@@ -23,7 +26,7 @@ export const SUPPORT_TOOLS: ReadonlySet<string> = new Set([
     'hwid_device_delete',
     'hwid_devices_delete_all',
     // Server status, so the bot can answer "is the node I connect through up?".
-    // Node objects also carry infrastructure detail — see REDACTED_FIELDS.
+    // Node objects also carry infrastructure detail, redacted by REDACTED_FIELDS.
     'nodes_list',
     'nodes_get',
 ]);
@@ -34,23 +37,40 @@ export const SUPPORT_RESOURCES: ReadonlySet<string> = new Set(['user-details']);
 export const SUPPORT_PROMPTS: ReadonlySet<string> = new Set(['user_audit']);
 
 /**
- * Working VPN credentials, and the collections that carry them as URIs.
- * Stripped from every panel response in support mode, so an ordinary user or
- * subscription lookup cannot place them in the LLM context.
+ * Fields deleted from every panel response in support mode, wherever they
+ * appear. Two groups, one mechanism.
  *
- * `trojanPassword`, `ssPassword` and `vlessUuid` are the scalar credential
- * fields on user records. `links` (string[]) and `ssConfLinks`
- * (Record<string,string>) are `SubscriptionInfoSchema` fields whose values
- * are `vless://`, `trojan://` and `ss://` URIs embedding those same
- * credentials — deleting the three scalar keys does not remove them, so the
- * two collections are deleted wholesale instead.
+ * **Credentials.** `trojanPassword`, `ssPassword` and `vlessUuid` are the
+ * scalar credential fields on user records. `links` (string[]) and
+ * `ssConfLinks` (Record<string,string>) are `SubscriptionInfoSchema` fields
+ * whose values are `vless://`, `trojan://` and `ss://` URIs embedding those
+ * same credentials — deleting the three scalar keys does not remove them, so
+ * the two collections are deleted wholesale instead.
  *
  * `subscriptionUrl` is deliberately absent: the bot hands out that link.
+ *
+ * **Infrastructure.** `nodes_list` / `nodes_get` return the whole node record.
+ * A user asking "is my server up?" needs `name`, `countryCode`, `isConnected`
+ * and `isDisabled`; the rest is operator detail with no reason to reach an LLM
+ * context or a support transcript — `address`, `ips`, `port` and `proxyUrl`
+ * locate the node, `note` is the admin's own scratchpad, `provider` names the
+ * hosting account, `system` carries hostname and CPU model, and `rawInbound`
+ * is the raw xray inbound, which for reality holds private keys.
  */
 export const REDACTED_FIELDS: readonly string[] = [
+    // Credentials
     'trojanPassword',
     'ssPassword',
     'vlessUuid',
     'links',
     'ssConfLinks',
+    // Node infrastructure
+    'address',
+    'ips',
+    'port',
+    'proxyUrl',
+    'note',
+    'provider',
+    'system',
+    'rawInbound',
 ];
