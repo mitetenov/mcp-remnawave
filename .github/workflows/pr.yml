@@ -1,0 +1,40 @@
+name: PR checks
+
+# The release workflow (ci.yml) runs only on push to main and never runs
+# tests — it builds, publishes a GitHub Release and pushes Docker images.
+# This workflow is the gate that runs before any of that happens.
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Matches the `engines` floor in package.json and the runtime in
+          # the Dockerfile.
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
