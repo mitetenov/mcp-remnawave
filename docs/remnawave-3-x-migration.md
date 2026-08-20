@@ -1,7 +1,7 @@
-# Remnawave 2.8.x → 3.3.0 Migration (MCP 2.0.0)
+# Remnawave 2.8.x → 3.3.0 Migration (MCP 3.0.0)
 
 **Researched:** 2026-08-20
-**MCP version:** 1.3.1 → 2.0.0
+**MCP version:** 1.3.1 → 3.0.0
 **Contract:** `@remnawave/backend-contract@^2.8.28` → `^3.4.2`
 **Target panel:** Remnawave 3.3.0 (released 2026-08-18)
 

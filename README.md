@@ -10,14 +10,14 @@
 
 MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing LLM clients (Claude Desktop, Cursor, Windsurf, etc.) with tools to manage a [Remnawave](https://github.com/remnawave/) VPN panel.
 
-**Version:** 2.0.0 | **Remnawave panel:** 3.3.x (API contract 3.4.x)
+**Version:** 3.0.0 | **Remnawave panel:** 3.3.x (API contract 3.4.x)
 
 ### Features
 
 - **178 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, node integrations, shared lists, connections, bandwidth stats, and metadata
 - **3 resources** — real-time panel stats, node status, health checks
 - **5 prompts** — guided workflows for common tasks
-- **Readonly mode** — restrict to 81 read-only tools for safe monitoring
+- **Support mode (default)** — restrict to 13 user-facing tools with credentials stripped, for support bots
 - **Caddy support** — `X-Api-Key` header for panels behind Caddy with custom path
 - **Type-safe** — built on [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) for API route validation
 - **stdio transport** — works with Claude Desktop, Cursor, Windsurf, and any MCP-compatible client
@@ -45,7 +45,7 @@ Create a `.env` file or pass environment variables:
 | `REMNAWAVE_BASE_URL` | Yes | Panel URL (e.g. `https://vpn.example.com`) |
 | `REMNAWAVE_API_TOKEN` | Yes | API token from panel settings |
 | `REMNAWAVE_API_KEY` | No | API key for Caddy reverse proxy authentication |
-| `REMNAWAVE_READONLY` | No | Set to `true` to enable readonly mode |
+| `REMNAWAVE_IS_SUPPORT` | No | Support mode, **on by default**. Set to exactly `false` for full access |
 
 ```env
 REMNAWAVE_BASE_URL=https://vpn.example.com
@@ -63,36 +63,37 @@ REMNAWAVE_API_KEY=your-caddy-api-key
 
 The `X-Api-Key` header will be added to every request automatically.
 
-### Readonly Mode
+### Support Mode
 
-Set `REMNAWAVE_READONLY=true` to disable all write operations (create, update, delete, enable, disable, restart, revoke, reset). Only read/list tools will be registered.
+The server runs in one of two modes.
 
-Useful for monitoring dashboards or shared environments where you want to prevent accidental changes.
+**Support mode is the default.** It exposes 13 user-facing tools, 1 resource and
+1 prompt, and strips `trojanPassword`, `ssPassword` and `vlessUuid` from every
+panel response. The only mutating operation is removing HWID devices, which is
+safe: a device re-registers on the next connect. Intended for support bots that
+act on behalf of an end user.
 
-In readonly mode, the available tools are reduced from 178 to 81:
+**Full mode** has no restrictions: all 178 tools, 4 resources, 5 prompts, and
+untouched responses. Enable it with `REMNAWAVE_IS_SUPPORT=false`.
 
-| Category | Available tools |
-|----------|----------------|
-| Users (7) | `users_list`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_accessible_nodes`, `users_tags_list`, `users_resolve` |
-| Nodes (3) | `nodes_list`, `nodes_get`, `nodes_tags_list` |
-| Hosts (3) | `hosts_list`, `hosts_get`, `hosts_tags_list` |
-| System (13) | all tools (read-only by nature) |
-| Subscriptions (10) | all tools (read-only by nature) |
-| Config Profiles & Inbounds (5) | `config_profiles_list`, `config_profiles_get`, `inbounds_list`, `config_profiles_get_inbounds`, `config_profiles_get_computed_config` |
-| Internal Squads (2) | `squads_list`, `squads_accessible_nodes` |
-| HWID (4) | `hwid_devices_list`, `hwid_devices_list_all`, `hwid_stats`, `hwid_top_users` |
-| API Tokens (1) | `api_tokens_list` |
-| Keygen (1) | `keygen_get` |
-| Infra Billing (4) | `billing_providers_list`, `billing_provider_get`, `billing_nodes_list`, `billing_history_list` |
-| Snippets (1) | `snippets_list` |
-| External Squads (2) | `external_squads_list`, `external_squads_get` |
-| Settings (1) | `settings_get` |
-| Sub Page Configs (2) | `sub_page_configs_list`, `sub_page_configs_get` |
-| Node Plugins (6) | `node_plugins_list`, `node_plugins_get`, `node_plugins_shared_lists_list`, `node_plugins_shared_lists_get`, `node_plugins_torrent_reports`, `node_plugins_torrent_stats` |
-| Connections (6) | `connections_by_user`, `connections_by_user_result`, `connections_by_node`, `connections_by_node_result`, `connections_geocheck_by_node`, `connections_geocheck_by_node_result` |
-| Bandwidth Stats (6) | all tools (read-only by nature) |
-| Node Integrations (2) | `node_integrations_list`, `node_integrations_get` |
-| Metadata (2) | `metadata_node_get`, `metadata_user_get` |
+The flag is parsed fail-closed — only the exact string `false` unlocks full
+mode, so an unset, empty or misspelled value keeps the restricted surface.
+
+Tools available in support mode:
+
+| Category | Tools |
+|----------|-------|
+| User lookup (4) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid` |
+| Subscription (4) | `subscriptions_get_by_user_id`, `subscriptions_get_by_username`, `subscriptions_get_by_short_uuid`, `subscription_info` |
+| Access and usage (2) | `users_accessible_nodes`, `bandwidth_user_usage` |
+| Devices (3) | `hwid_devices_list`, `hwid_device_delete`, `hwid_devices_delete_all` |
+
+Resource: `remnawave://users/{userId}`. Prompt: `user_audit`.
+
+> The allowlist reduces blast radius; it is not a security boundary, since the
+> process still holds a panel token that can do anything. For a real boundary,
+> issue the bot a scoped API token — Remnawave 3.x accepts `scopes` on
+> `POST /api/tokens` and lists the catalogue at `GET /api/tokens/scopes`.
 
 ### Usage with Claude Desktop
 
@@ -108,7 +109,7 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
         "REMNAWAVE_BASE_URL": "https://vpn.example.com",
         "REMNAWAVE_API_TOKEN": "your-api-token-here",
         "REMNAWAVE_API_KEY": "your-caddy-api-key",
-        "REMNAWAVE_READONLY": "false"
+        "REMNAWAVE_IS_SUPPORT": "false"
       }
     }
   }
@@ -129,7 +130,7 @@ Add to `.cursor/mcp.json` or `.windsurf/mcp.json` in your project:
         "REMNAWAVE_BASE_URL": "https://vpn.example.com",
         "REMNAWAVE_API_TOKEN": "your-api-token-here",
         "REMNAWAVE_API_KEY": "your-caddy-api-key",
-        "REMNAWAVE_READONLY": "false"
+        "REMNAWAVE_IS_SUPPORT": "false"
       }
     }
   }
@@ -512,14 +513,14 @@ MIT
 
 MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), предоставляющий LLM-клиентам (Claude Desktop, Cursor, Windsurf и др.) инструменты для управления VPN-панелью [Remnawave](https://github.com/remnawave/).
 
-**Версия:** 2.0.0 | **Панель Remnawave:** 3.3.x (контракт API 3.4.x)
+**Версия:** 3.0.0 | **Панель Remnawave:** 3.3.x (контракт API 3.4.x)
 
 ### Возможности
 
 - **178 инструментов** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, интеграциями нод, общими списками, соединениями, статистикой трафика и метаданными
 - **3 ресурса** — статистика панели, статус нод, проверка здоровья в реальном времени
 - **5 промптов** — пошаговые сценарии для типичных задач
-- **Readonly-режим** — ограничение до 81 инструмента только для чтения
+- **Режим support (по умолчанию)** — 13 пользовательских инструментов с вырезанными кредами, для саппорт-ботов
 - **Поддержка Caddy** — заголовок `X-Api-Key` для панелей за Caddy с кастомным путём
 - **Type-safe** — построен на [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) для валидации API-маршрутов
 - **stdio транспорт** — работает с Claude Desktop, Cursor, Windsurf и любым MCP-совместимым клиентом
@@ -547,7 +548,7 @@ npm run build
 | `REMNAWAVE_BASE_URL` | Да | URL панели (например `https://vpn.example.com`) |
 | `REMNAWAVE_API_TOKEN` | Да | API-токен из настроек панели |
 | `REMNAWAVE_API_KEY` | Нет | API-ключ для аутентификации через Caddy reverse proxy |
-| `REMNAWAVE_READONLY` | Нет | `true` для включения режима только чтения |
+| `REMNAWAVE_IS_SUPPORT` | Нет | Режим support, **включён по умолчанию**. Ровно `false` — полный доступ |
 
 ```env
 REMNAWAVE_BASE_URL=https://vpn.example.com
@@ -565,36 +566,39 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 
 Заголовок `X-Api-Key` будет автоматически добавляться к каждому запросу.
 
-### Режим Readonly
+### Режим Support
 
-Установите `REMNAWAVE_READONLY=true`, чтобы отключить все операции записи (создание, обновление, удаление, включение, отключение, перезапуск, отзыв, сброс). Будут зарегистрированы только инструменты чтения.
+Сервер работает в одном из двух режимов.
 
-Полезно для мониторинговых дашбордов или общих окружений, где нужно исключить случайные изменения.
+**Support — режим по умолчанию.** Открыто 13 пользовательских инструментов,
+1 ресурс и 1 промпт, а из каждого ответа панели вырезаются `trojanPassword`,
+`ssPassword` и `vlessUuid`. Единственная операция записи — удаление
+HWID-устройств; она безопасна, устройство снова появится при следующем
+подключении. Режим рассчитан на саппорт-ботов, действующих от имени
+пользователя.
 
-В readonly-режиме количество доступных инструментов сокращается с 178 до 81:
+**Full — без ограничений:** все 178 инструментов, 4 ресурса, 5 промптов,
+ответы не трогаются. Включается через `REMNAWAVE_IS_SUPPORT=false`.
 
-| Категория | Доступные инструменты |
-|-----------|----------------------|
-| Пользователи (7) | `users_list`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_accessible_nodes`, `users_tags_list`, `users_resolve` |
-| Ноды (3) | `nodes_list`, `nodes_get`, `nodes_tags_list` |
-| Хосты (3) | `hosts_list`, `hosts_get`, `hosts_tags_list` |
-| Система (13) | все инструменты (только чтение по природе) |
-| Подписки (10) | все инструменты (только чтение по природе) |
-| Конфиг-профили и Inbounds (5) | `config_profiles_list`, `config_profiles_get`, `inbounds_list`, `config_profiles_get_inbounds`, `config_profiles_get_computed_config` |
-| Внутренние группы (2) | `squads_list`, `squads_accessible_nodes` |
-| HWID (4) | `hwid_devices_list`, `hwid_devices_list_all`, `hwid_stats`, `hwid_top_users` |
-| API-токены (1) | `api_tokens_list` |
-| Keygen (1) | `keygen_get` |
-| Биллинг (4) | `billing_providers_list`, `billing_provider_get`, `billing_nodes_list`, `billing_history_list` |
-| Сниппеты (1) | `snippets_list` |
-| Внешние группы (2) | `external_squads_list`, `external_squads_get` |
-| Настройки (1) | `settings_get` |
-| Страницы подписок (2) | `sub_page_configs_list`, `sub_page_configs_get` |
-| Плагины нод (6) | `node_plugins_list`, `node_plugins_get`, `node_plugins_shared_lists_list`, `node_plugins_shared_lists_get`, `node_plugins_torrent_reports`, `node_plugins_torrent_stats` |
-| Соединения (6) | `connections_by_user`, `connections_by_user_result`, `connections_by_node`, `connections_by_node_result`, `connections_geocheck_by_node`, `connections_geocheck_by_node_result` |
-| Статистика трафика (6) | все инструменты (только чтение по природе) |
-| Интеграции нод (2) | `node_integrations_list`, `node_integrations_get` |
-| Метаданные (2) | `metadata_node_get`, `metadata_user_get` |
+Флаг разбирается fail-closed: полный режим включает только точная строка
+`false`, а пустое, отсутствующее или написанное с опечаткой значение оставляет
+урезанную поверхность.
+
+Инструменты в режиме support:
+
+| Категория | Инструменты |
+|-----------|-------------|
+| Поиск пользователя (4) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid` |
+| Подписка (4) | `subscriptions_get_by_user_id`, `subscriptions_get_by_username`, `subscriptions_get_by_short_uuid`, `subscription_info` |
+| Доступ и расход (2) | `users_accessible_nodes`, `bandwidth_user_usage` |
+| Устройства (3) | `hwid_devices_list`, `hwid_device_delete`, `hwid_devices_delete_all` |
+
+Ресурс: `remnawave://users/{userId}`. Промпт: `user_audit`.
+
+> Allowlist уменьшает радиус поражения, но не является границей безопасности:
+> процесс всё ещё держит токен панели, которым можно всё. Настоящая граница —
+> скоупнутый API-токен: Remnawave 3.x принимает `scopes` в `POST /api/tokens`
+> и отдаёт каталог в `GET /api/tokens/scopes`.
 
 ### Использование с Claude Desktop
 
@@ -610,7 +614,7 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
         "REMNAWAVE_BASE_URL": "https://vpn.example.com",
         "REMNAWAVE_API_TOKEN": "ваш-api-токен",
         "REMNAWAVE_API_KEY": "ваш-caddy-api-ключ",
-        "REMNAWAVE_READONLY": "false"
+        "REMNAWAVE_IS_SUPPORT": "false"
       }
     }
   }
@@ -631,7 +635,7 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
         "REMNAWAVE_BASE_URL": "https://vpn.example.com",
         "REMNAWAVE_API_TOKEN": "ваш-api-токен",
         "REMNAWAVE_API_KEY": "ваш-caddy-api-ключ",
-        "REMNAWAVE_READONLY": "false"
+        "REMNAWAVE_IS_SUPPORT": "false"
       }
     }
   }
