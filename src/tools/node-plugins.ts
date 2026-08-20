@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
-export function registerNodePluginTools(server: McpServer, client: RemnawaveClient, readonly: boolean) {
+export function registerNodePluginTools(server: McpServer, client: RemnawaveClient) {
     server.tool('node_plugins_list', 'List all node plugins', {}, async () => {
         try { return toolResult(await client.getNodePlugins()); } catch (e) { return toolError(e); }
     });
@@ -14,6 +14,16 @@ export function registerNodePluginTools(server: McpServer, client: RemnawaveClie
         try { return toolResult(await client.getNodePlugin(uuid)); } catch (e) { return toolError(e); }
     });
 
+    server.tool('node_plugins_shared_lists_list', 'List all node plugin shared lists', {}, async () => {
+        try { return toolResult(await client.getSharedLists()); } catch (e) { return toolError(e); }
+    });
+
+    server.tool('node_plugins_shared_lists_get', 'Get a shared list by UUID', {
+        uuid: z.string().describe('Shared list UUID'),
+    }, async ({ uuid }) => {
+        try { return toolResult(await client.getSharedList(uuid)); } catch (e) { return toolError(e); }
+    });
+
     server.tool('node_plugins_torrent_reports', 'Get torrent blocker reports', {}, async () => {
         try { return toolResult(await client.getTorrentBlockerReports()); } catch (e) { return toolError(e); }
     });
@@ -21,8 +31,6 @@ export function registerNodePluginTools(server: McpServer, client: RemnawaveClie
     server.tool('node_plugins_torrent_stats', 'Get torrent blocker statistics', {}, async () => {
         try { return toolResult(await client.getTorrentBlockerStats()); } catch (e) { return toolError(e); }
     });
-
-    if (readonly) return;
 
     server.tool('node_plugins_create', 'Create a new node plugin', {
         name: z.string().describe('Plugin name'),
@@ -86,6 +94,38 @@ export function registerNodePluginTools(server: McpServer, client: RemnawaveClie
         ]).describe('Which nodes to target'),
     }, async (params) => {
         try { return toolResult(await client.executeNodePlugin(params)); } catch (e) { return toolError(e); }
+    });
+
+    server.tool('node_plugins_sync', 'Push a plugin config, including its shared lists, to every node it is active on', {
+        uuid: z.string().describe('Plugin UUID'),
+    }, async (params) => {
+        try { return toolResult(await client.syncNodePlugin(params)); } catch (e) { return toolError(e); }
+    });
+
+    server.tool('node_plugins_shared_lists_create', 'Create a node plugin shared list', {
+        name: z.string().describe('Shared list name'),
+        config: z.object({}).catchall(z.unknown()).describe('Shared list config key-value pairs'),
+    }, async (params) => {
+        try { return toolResult(await client.createSharedList(params)); } catch (e) { return toolError(e); }
+    });
+
+    server.tool('node_plugins_shared_lists_update', 'Update a node plugin shared list', {
+        name: z.string().describe('Shared list name (identifies the list to update)'),
+        config: z.object({}).catchall(z.unknown()).describe('New config key-value pairs'),
+    }, async (params) => {
+        try { return toolResult(await client.updateSharedList(params)); } catch (e) { return toolError(e); }
+    });
+
+    server.tool('node_plugins_shared_lists_delete', 'Delete a node plugin shared list', {
+        uuid: z.string().describe('Shared list UUID'),
+    }, async ({ uuid }) => {
+        try { await client.deleteSharedList(uuid); return toolResult({ success: true, message: `Shared list ${uuid} deleted` }); } catch (e) { return toolError(e); }
+    });
+
+    server.tool('node_plugins_shared_lists_sync', 'Push every plugin referencing this shared list to the nodes it is active on', {
+        name: z.string().describe('Shared list name'),
+    }, async (params) => {
+        try { return toolResult(await client.syncSharedList(params)); } catch (e) { return toolError(e); }
     });
 
     server.tool('node_plugins_torrent_truncate', 'Truncate all torrent blocker reports', {}, async () => {

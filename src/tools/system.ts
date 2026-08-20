@@ -135,6 +135,55 @@ export function registerSystemTools(
     );
 
     server.tool(
+        'system_stats_digest',
+        'Get a digest of system statistics',
+        {
+            start: z
+                .string()
+                .describe('Start of the period, ISO 8601 with timezone offset (e.g. 2026-07-15T00:00:00Z)'),
+            end: z
+                .string()
+                .describe('End of the period, ISO 8601 with timezone offset (e.g. 2026-07-15T00:00:00Z)'),
+        },
+        async ({ start, end }) => {
+            try {
+                const result = await client.getStatsDigest({ start, end });
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'system_http_stats',
+        'Get HTTP route statistics of the panel',
+        {},
+        async () => {
+            try {
+                const result = await client.getHttpStats();
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'system_configuration',
+        'Get the current panel configuration',
+        {},
+        async () => {
+            try {
+                const result = await client.getConfiguration();
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
         'system_srr_matcher',
         'Test subscription request routing rules',
         {
@@ -142,7 +191,7 @@ export function registerSystemTools(
         },
         async (params) => {
             try {
-                const result = await client.testSrrMatcher(params as TestSrrMatcherCommand.Request);
+                const result = await client.testSrrMatcher(params as TestSrrMatcherCommand.RequestBody);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);

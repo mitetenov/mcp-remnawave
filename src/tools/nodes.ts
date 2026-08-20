@@ -4,7 +4,7 @@ import type { CreateNodeCommand } from '@remnawave/backend-contract';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
-export function registerNodeTools(server: McpServer, client: RemnawaveClient, readonly: boolean) {
+export function registerNodeTools(server: McpServer, client: RemnawaveClient) {
     server.tool(
         'nodes_list',
         'List all Remnawave nodes',
@@ -48,8 +48,6 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
             }
         },
     );
-
-    if (readonly) return;
 
     server.tool(
         'nodes_create',
@@ -134,7 +132,7 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
                 if (params.proxyUrl !== undefined)
                     body.proxyUrl = params.proxyUrl;
 
-                const result = await client.createNode(body as CreateNodeCommand.Request);
+                const result = await client.createNode(body as CreateNodeCommand.RequestBody);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -253,8 +251,7 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
             uuid: z.string().describe('Node UUID'),
             forceRestart: z
                 .boolean()
-                .optional()
-                .describe('Force restart (required in Remnawave 2.8+)'),
+                .describe('Force restart (required by the panel)'),
         },
         async ({ uuid, forceRestart }) => {
             try {
@@ -272,8 +269,7 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
         {
             forceRestart: z
                 .boolean()
-                .optional()
-                .describe('Force restart (required in Remnawave 2.8+)'),
+                .describe('Force restart (required by the panel)'),
         },
         async ({ forceRestart }) => {
             try {

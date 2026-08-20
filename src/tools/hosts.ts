@@ -6,7 +6,7 @@ import { toolResult, toolError } from './helpers.js';
 
 const SUBSCRIPTION_TYPES = ['XRAY_JSON', 'XRAY_BASE64', 'MIHOMO', 'STASH', 'CLASH', 'SINGBOX'] as const;
 
-export function registerHostTools(server: McpServer, client: RemnawaveClient, readonly: boolean) {
+export function registerHostTools(server: McpServer, client: RemnawaveClient) {
     server.tool(
         'hosts_list',
         'List all Remnawave hosts',
@@ -50,8 +50,6 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
             }
         },
     );
-
-    if (readonly) return;
 
     server.tool(
         'hosts_create',
@@ -202,7 +200,7 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 if (params.verifyPeerCertByName !== undefined)
                     body.verifyPeerCertByName = params.verifyPeerCertByName;
 
-                const result = await client.createHost(body as CreateHostCommand.Request);
+                const result = await client.createHost(body as CreateHostCommand.RequestBody);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -311,7 +309,7 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                         ...(configProfileInboundUuid !== undefined ? { configProfileInboundUuid } : {}),
                     };
                 }
-                const result = await client.updateHost(body as UpdateHostCommand.Request);
+                const result = await client.updateHost(body as UpdateHostCommand.RequestBody);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);

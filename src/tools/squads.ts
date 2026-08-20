@@ -6,7 +6,6 @@ import { toolResult, toolError } from './helpers.js';
 export function registerSquadTools(
     server: McpServer,
     client: RemnawaveClient,
-    readonly: boolean,
 ) {
     server.tool(
         'squads_list',
@@ -37,8 +36,6 @@ export function registerSquadTools(
             }
         },
     );
-
-    if (readonly) return;
 
     server.tool(
         'squads_create',
@@ -95,19 +92,18 @@ export function registerSquadTools(
 
     server.tool(
         'squads_add_users',
-        'Add users to an internal squad',
+        'Add specific users to an internal squad',
         {
             squadUuid: z.string().describe('Squad UUID'),
-            userUuids: z
-                .array(z.string())
-                .describe('Array of user UUIDs to add'),
+            userIds: z
+                .array(z.number())
+                .describe('Array of user IDs to add (max 1000)'),
         },
-        async ({ squadUuid, userUuids }) => {
+        async ({ squadUuid, userIds }) => {
             try {
-                const result = await client.addUsersToSquad(
-                    squadUuid,
-                    userUuids,
-                );
+                const result = await client.addManyUsersToSquad(squadUuid, {
+                    userIds,
+                });
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -117,19 +113,50 @@ export function registerSquadTools(
 
     server.tool(
         'squads_remove_users',
-        'Remove users from an internal squad',
+        'Remove specific users from an internal squad',
         {
             squadUuid: z.string().describe('Squad UUID'),
-            userUuids: z
-                .array(z.string())
-                .describe('Array of user UUIDs to remove'),
+            userIds: z
+                .array(z.number())
+                .describe('Array of user IDs to remove (max 1000)'),
         },
-        async ({ squadUuid, userUuids }) => {
+        async ({ squadUuid, userIds }) => {
             try {
-                const result = await client.removeUsersFromSquad(
-                    squadUuid,
-                    userUuids,
-                );
+                const result = await client.removeManyUsersFromSquad(squadUuid, {
+                    userIds,
+                });
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'squads_add_all_users',
+        'Add EVERY user on the panel to an internal squad',
+        {
+            squadUuid: z.string().describe('Squad UUID'),
+        },
+        async ({ squadUuid }) => {
+            try {
+                const result = await client.addAllUsersToSquad(squadUuid);
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'squads_remove_all_users',
+        'Remove EVERY user from an internal squad',
+        {
+            squadUuid: z.string().describe('Squad UUID'),
+        },
+        async ({ squadUuid }) => {
+            try {
+                const result = await client.removeAllUsersFromSquad(squadUuid);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);

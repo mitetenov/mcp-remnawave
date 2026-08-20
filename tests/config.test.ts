@@ -6,7 +6,7 @@ describe('loadConfig', () => {
         delete process.env.REMNAWAVE_BASE_URL;
         delete process.env.REMNAWAVE_API_TOKEN;
         delete process.env.REMNAWAVE_API_KEY;
-        delete process.env.REMNAWAVE_READONLY;
+        delete process.env.REMNAWAVE_IS_SUPPORT;
     });
 
     it('returns empty baseUrl when REMNAWAVE_BASE_URL is missing', () => {
@@ -30,7 +30,7 @@ describe('loadConfig', () => {
         expect(config.baseUrl).toBe('https://panel.example.com');
         expect(config.apiToken).toBe('token123');
         expect(config.apiKey).toBeUndefined();
-        expect(config.readonly).toBe(false);
+        expect(config.isSupport).toBe(true);
         expect(isConfigured(config)).toBe(true);
     });
 
@@ -38,12 +38,12 @@ describe('loadConfig', () => {
         process.env.REMNAWAVE_BASE_URL = 'https://panel.example.com';
         process.env.REMNAWAVE_API_TOKEN = 'token123';
         process.env.REMNAWAVE_API_KEY = 'key456';
-        process.env.REMNAWAVE_READONLY = 'true';
+        process.env.REMNAWAVE_IS_SUPPORT = 'false';
         const config = loadConfig();
         expect(config.baseUrl).toBe('https://panel.example.com');
         expect(config.apiToken).toBe('token123');
         expect(config.apiKey).toBe('key456');
-        expect(config.readonly).toBe(true);
+        expect(config.isSupport).toBe(false);
     });
 
     it('strips trailing slash from baseUrl', () => {
@@ -58,5 +58,27 @@ describe('loadConfig', () => {
         process.env.REMNAWAVE_API_TOKEN = 'token123';
         const config = loadConfig();
         expect(config.baseUrl).toBe('https://panel.example.com');
+    });
+
+    it('defaults to support mode when REMNAWAVE_IS_SUPPORT is unset', () => {
+        process.env.REMNAWAVE_BASE_URL = 'https://panel.example.com';
+        process.env.REMNAWAVE_API_TOKEN = 'token123';
+        expect(loadConfig().isSupport).toBe(true);
+    });
+
+    it('leaves support mode only for the exact string "false"', () => {
+        process.env.REMNAWAVE_BASE_URL = 'https://panel.example.com';
+        process.env.REMNAWAVE_API_TOKEN = 'token123';
+        process.env.REMNAWAVE_IS_SUPPORT = 'false';
+        expect(loadConfig().isSupport).toBe(false);
+    });
+
+    it('fails closed on near-miss values', () => {
+        process.env.REMNAWAVE_BASE_URL = 'https://panel.example.com';
+        process.env.REMNAWAVE_API_TOKEN = 'token123';
+        for (const value of ['FALSE', 'False', '0', '', 'falce', 'true', 'no']) {
+            process.env.REMNAWAVE_IS_SUPPORT = value;
+            expect(loadConfig().isSupport, `value: ${JSON.stringify(value)}`).toBe(true);
+        }
     });
 });

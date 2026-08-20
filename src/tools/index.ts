@@ -16,26 +16,30 @@ import { registerExternalSquadTools } from './external-squads.js';
 import { registerSettingsTools } from './settings.js';
 import { registerSubPageConfigTools } from './subscription-page-configs.js';
 import { registerNodePluginTools } from './node-plugins.js';
-import { registerIpControlTools } from './ip-control.js';
+import { registerConnectionTools } from './connections.js';
+import { registerBandwidthTools } from './bandwidth.js';
+import { registerNodeIntegrationTools } from './node-integrations.js';
 import { registerMetadataTools } from './metadata.js';
 
-export function registerAllTools(server: McpServer, client: RemnawaveClient, readonly: boolean) {
-    registerUserTools(server, client, readonly);
-    registerNodeTools(server, client, readonly);
-    registerHostTools(server, client, readonly);
+export function registerAllTools(server: McpServer, client: RemnawaveClient) {
+    registerUserTools(server, client);
+    registerNodeTools(server, client);
+    registerHostTools(server, client);
     registerSystemTools(server, client);
     registerSubscriptionTools(server, client);
-    registerInboundTools(server, client, readonly);
-    registerSquadTools(server, client, readonly);
-    registerHwidTools(server, client, readonly);
-    registerApiTokenTools(server, client, readonly);
+    registerInboundTools(server, client);
+    registerSquadTools(server, client);
+    registerHwidTools(server, client);
+    registerApiTokenTools(server, client);
     registerKeygenTools(server, client);
-    registerInfraBillingTools(server, client, readonly);
-    registerSnippetTools(server, client, readonly);
-    registerExternalSquadTools(server, client, readonly);
-    registerSettingsTools(server, client, readonly);
-    registerSubPageConfigTools(server, client, readonly);
-    registerNodePluginTools(server, client, readonly);
-    registerIpControlTools(server, client, readonly);
-    registerMetadataTools(server, client, readonly);
+    registerInfraBillingTools(server, client);
+    registerSnippetTools(server, client);
+    registerExternalSquadTools(server, client);
+    registerSettingsTools(server, client);
+    registerSubPageConfigTools(server, client);
+    registerNodePluginTools(server, client);
+    registerConnectionTools(server, client);
+    registerBandwidthTools(server, client);
+    registerNodeIntegrationTools(server, client);
+    registerMetadataTools(server, client);
 }

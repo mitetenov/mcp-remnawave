@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
-export function registerInfraBillingTools(server: McpServer, client: RemnawaveClient, readonly: boolean) {
+export function registerInfraBillingTools(server: McpServer, client: RemnawaveClient) {
     server.tool('billing_providers_list', 'List all infrastructure billing providers', {}, async () => {
         try { return toolResult(await client.getBillingProviders()); } catch (e) { return toolError(e); }
     });
@@ -21,8 +21,6 @@ export function registerInfraBillingTools(server: McpServer, client: RemnawaveCl
     server.tool('billing_history_list', 'List billing history', {}, async () => {
         try { return toolResult(await client.getBillingHistory()); } catch (e) { return toolError(e); }
     });
-
-    if (readonly) return;
 
     server.tool('billing_provider_create', 'Create a new billing provider', {
         name: z.string().describe('Provider name'),

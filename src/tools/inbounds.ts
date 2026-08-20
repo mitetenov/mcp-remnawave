@@ -6,7 +6,6 @@ import { toolResult, toolError } from './helpers.js';
 export function registerInboundTools(
     server: McpServer,
     client: RemnawaveClient,
-    readonly: boolean,
 ) {
     server.tool(
         'config_profiles_list',
@@ -83,8 +82,6 @@ export function registerInboundTools(
             }
         },
     );
-
-    if (readonly) return;
 
     server.tool(
         'config_profiles_create',
