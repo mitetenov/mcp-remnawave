@@ -71,6 +71,23 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
     );
 
     server.tool(
+        'users_get_by_telegram_id',
+        'Get Remnawave users by their Telegram ID. Returns a list — one Telegram ID may own several accounts.',
+        {
+            telegramId: z.number().describe('Telegram user ID'),
+            size: z.number().optional().describe('Max users to return (default 25)'),
+        },
+        async ({ telegramId, size }) => {
+            try {
+                const result = await client.getUsersByTelegramId(telegramId, size);
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
         'users_accessible_nodes',
         'List nodes a Remnawave user can connect to',
         {

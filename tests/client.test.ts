@@ -106,6 +106,32 @@ describe('RemnawaveClient', () => {
             );
         });
 
+        it('getUsersByTelegramId filters the stream endpoint by telegram id', async () => {
+            const client = createClient();
+            const fetch = mockFetch({});
+            vi.stubGlobal('fetch', fetch);
+
+            await client.getUsersByTelegramId(123456789);
+
+            expect(fetch).toHaveBeenCalledWith(
+                'https://panel.example.com/api/users/stream?telegramId=123456789&size=25',
+                expect.objectContaining({ method: 'GET' }),
+            );
+        });
+
+        it('getUsersByTelegramId honours a custom page size', async () => {
+            const client = createClient();
+            const fetch = mockFetch({});
+            vi.stubGlobal('fetch', fetch);
+
+            await client.getUsersByTelegramId(123456789, 100);
+
+            expect(fetch).toHaveBeenCalledWith(
+                expect.stringContaining('size=100'),
+                expect.objectContaining({ method: 'GET' }),
+            );
+        });
+
         it('getUserAccessibleNodes constructs correct URL', async () => {
             const client = createClient();
             const fetch = mockFetch({});
@@ -1574,6 +1600,54 @@ describe('RemnawaveClient', () => {
             expect(user.vlessUuid).toBeUndefined();
             expect(user.userTraffic.vlessUuid).toBeUndefined();
             expect(user.userTraffic.usedTrafficBytes).toBe(1);
+        });
+
+        it('strips node infrastructure detail but keeps what a user can act on', async () => {
+            const client = new RemnawaveClient({
+                baseUrl: 'https://panel.example.com',
+                apiToken: 'test-token',
+                isSupport: true,
+            });
+            vi.stubGlobal('fetch', mockFetch({
+                response: [
+                    {
+                        uuid: 'node-1',
+                        name: 'Germany-1',
+                        countryCode: 'DE',
+                        isConnected: true,
+                        isDisabled: false,
+                        address: '10.0.0.7',
+                        port: 2222,
+                        proxyUrl: 'https://proxy.internal',
+                        ips: [{ ip: '10.0.0.7', status: 'OK' }],
+                        note: 'moved to hetzner, billing under acct 4471',
+                        provider: { name: 'Hetzner', loginUrl: 'https://console.hetzner.cloud' },
+                        system: { info: { hostname: 'de-1.internal', cpuModel: 'EPYC 7402P' } },
+                        configProfile: {
+                            activeInbounds: [
+                                { tag: 'VLESS', rawInbound: { privateKey: 'reality-private-key' } },
+                            ],
+                        },
+                    },
+                ],
+            }));
+
+            const body = (await client.getNodes()) as Record<string, any>;
+            const result = body.response[0];
+
+            expect(result.name).toBe('Germany-1');
+            expect(result.countryCode).toBe('DE');
+            expect(result.isConnected).toBe(true);
+            expect(result.isDisabled).toBe(false);
+
+            expect(result.address).toBeUndefined();
+            expect(result.port).toBeUndefined();
+            expect(result.proxyUrl).toBeUndefined();
+            expect(result.ips).toBeUndefined();
+            expect(result.note).toBeUndefined();
+            expect(result.provider).toBeUndefined();
+            expect(result.system).toBeUndefined();
+            expect(result.configProfile.activeInbounds[0].rawInbound).toBeUndefined();
         });
 
         it('keeps the subscription url', async () => {

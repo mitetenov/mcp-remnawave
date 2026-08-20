@@ -72,14 +72,14 @@ import { Config, DEFAULT_TIMEOUT_MS, isConfigured } from '../config.js';
 import { REDACTED_FIELDS } from '../support-profile.js';
 
 /**
- * Deletes credential fields in place, everywhere they appear. The value comes
+ * Deletes redacted fields in place, everywhere they appear. The value comes
  * straight from `res.json()` on every call, so nothing else holds a reference
  * to it and mutating is safe.
  */
-function stripCredentials(value: unknown): void {
+function stripRedactedFields(value: unknown): void {
     if (Array.isArray(value)) {
         for (const item of value) {
-            stripCredentials(item);
+            stripRedactedFields(item);
         }
         return;
     }
@@ -91,7 +91,7 @@ function stripCredentials(value: unknown): void {
         delete record[field];
     }
     for (const nested of Object.values(record)) {
-        stripCredentials(nested);
+        stripRedactedFields(nested);
     }
 }
 
@@ -165,7 +165,7 @@ export class RemnawaveClient {
         }
         const data = (await res.json()) as T;
         if (this.isSupport) {
-            stripCredentials(data);
+            stripRedactedFields(data);
         }
         return data;
     }
@@ -225,6 +225,26 @@ export class RemnawaveClient {
 
     async getUserByShortUuid(shortUuid: string) {
         return this.get(REST_API.USERS.GET_BY.SHORT_UUID(shortUuid));
+    }
+
+    /**
+     * Looks a user up by Telegram ID.
+     *
+     * `GET /api/users/by-telegram-id/{id}` was removed in panel 3.x and
+     * `POST /api/users/resolve` only accepts id, shortUuid or username. The
+     * `stream` route is the one place left that still matches a Telegram ID,
+     * and it does so exactly (`WHERE users.telegram_id = $1`) — unlike the
+     * `filters` parameter on `GET /api/users`, which matches a substring.
+     *
+     * Despite the route name this is an ordinary JSON request/response; the
+     * "stream" refers to its cursor pagination. The response is a list: a
+     * Telegram ID may own several accounts, and the column has no unique
+     * constraint.
+     */
+    async getUsersByTelegramId(telegramId: number, size = 25) {
+        return this.get(
+            `${REST_API.USERS.STREAM}?telegramId=${telegramId}&size=${size}`,
+        );
     }
 
     async getUserAccessibleNodes(userId: number) {

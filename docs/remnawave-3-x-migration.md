@@ -99,6 +99,28 @@ Tool count: **153 → 178** (readonly **69 → 81**).
 
 ## 7. Not migrated
 
-- `GET /api/users/stream` (Redis-Streams style export) — a streaming endpoint does not fit the
-  request/response shape of an MCP tool.
 - `GET /api/tokens/scopes` is still unexposed, as before.
+
+## 8. Follow-up: `users_get_by_telegram_id` restored via `/stream`
+
+The first pass dismissed `GET /api/users/stream` as a streaming export that would not fit an MCP
+tool. That was wrong on both counts: the route returns an ordinary JSON body
+(`{ users, nextCursor, hasMore }`) and "stream" names its cursor pagination, not its transport.
+
+It also carries the only exact Telegram-ID match left in the panel:
+
+```ts
+if (telegramId !== undefined) {
+    qb = qb.where('users.telegramId', '=', BigInt(telegramId));
+}
+```
+
+The alternative — `GET /api/users?filters=[{"id":"telegramId","value":"..."}]` — compares
+`CAST(telegram_id AS TEXT) LIKE '%value%'`, so a lookup for `12345` also returns `912345`. For a
+support bot that resolves the sender's own account, a substring match is a wrong-account bug, so
+the filter route was rejected.
+
+`users_get_by_telegram_id` therefore keeps its pre-3.x name and returns a **list**: `telegram_id`
+is a nullable column with no unique constraint, so one Telegram ID may own several accounts.
+
+Tool count: **178 → 179** (support **15 → 16**).

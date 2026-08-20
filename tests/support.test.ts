@@ -56,6 +56,14 @@ describe('support mode', () => {
         expect(tools).not.toContain('users_list');
     });
 
+    it('can look a user up by telegram id', () => {
+        const { tools } = collect(true);
+
+        // The bot's only entry point: it knows the sender's Telegram ID and
+        // nothing else about the account.
+        expect(tools).toContain('users_get_by_telegram_id');
+    });
+
     it('every profile name exists in full mode', () => {
         const full = collect(false);
 
@@ -74,9 +82,9 @@ describe('support mode', () => {
     it('full mode filters nothing', () => {
         const { tools, resources, prompts } = collect(false);
 
-        expect(tools).toHaveLength(178);
+        expect(tools).toHaveLength(179);
         expect(resources).toHaveLength(4);
         expect(prompts).toHaveLength(5);
-        expect(new Set(tools).size).toBe(178);
+        expect(new Set(tools).size).toBe(179);
     });
 });
