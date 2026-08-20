@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
-export function registerNodeIntegrationTools(server: McpServer, client: RemnawaveClient, readonly: boolean) {
+export function registerNodeIntegrationTools(server: McpServer, client: RemnawaveClient) {
     server.tool('node_integrations_list', 'List all node integrations', {}, async () => {
         try { return toolResult(await client.getNodeIntegrations()); } catch (e) { return toolError(e); }
     });
@@ -13,8 +13,6 @@ export function registerNodeIntegrationTools(server: McpServer, client: Remnawav
     }, async ({ uuid }) => {
         try { return toolResult(await client.getNodeIntegration(uuid)); } catch (e) { return toolError(e); }
     });
-
-    if (readonly) return;
 
     server.tool('node_integrations_create', 'Create a node integration', {
         name: z.string().describe('Integration name (2-30 characters)'),

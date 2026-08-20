@@ -4,7 +4,7 @@ import type { CreateUserCommand, UpdateUserCommand } from '@remnawave/backend-co
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
-export function registerUserTools(server: McpServer, client: RemnawaveClient, readonly: boolean) {
+export function registerUserTools(server: McpServer, client: RemnawaveClient) {
     server.tool(
         'users_list',
         'List all Remnawave VPN users with pagination',
@@ -117,8 +117,6 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient, re
             }
         },
     );
-
-    if (readonly) return;
 
     server.tool(
         'users_create',

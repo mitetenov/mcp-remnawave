@@ -6,7 +6,7 @@ import { toolResult, toolError } from './helpers.js';
 
 const SUBSCRIPTION_TYPES = ['XRAY_JSON', 'XRAY_BASE64', 'MIHOMO', 'STASH', 'CLASH', 'SINGBOX'] as const;
 
-export function registerHostTools(server: McpServer, client: RemnawaveClient, readonly: boolean) {
+export function registerHostTools(server: McpServer, client: RemnawaveClient) {
     server.tool(
         'hosts_list',
         'List all Remnawave hosts',
@@ -50,8 +50,6 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
             }
         },
     );
-
-    if (readonly) return;
 
     server.tool(
         'hosts_create',

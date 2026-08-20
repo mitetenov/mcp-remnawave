@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
-export function registerConnectionTools(server: McpServer, client: RemnawaveClient, readonly: boolean) {
+export function registerConnectionTools(server: McpServer, client: RemnawaveClient) {
     server.tool('connections_by_user', 'Request active connections for a user (async job)', {
         userId: z.number().describe('User ID'),
     }, async ({ userId }) => {
@@ -39,8 +39,6 @@ export function registerConnectionTools(server: McpServer, client: RemnawaveClie
     }, async ({ jobId }) => {
         try { return toolResult(await client.geocheckByNodeResult(jobId)); } catch (e) { return toolError(e); }
     });
-
-    if (readonly) return;
 
     server.tool('connections_drop', 'Drop active connections by IP or user ID on specific/all nodes', {
         dropBy: z.union([

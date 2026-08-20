@@ -4,7 +4,7 @@ import type { CreateNodeCommand } from '@remnawave/backend-contract';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
-export function registerNodeTools(server: McpServer, client: RemnawaveClient, readonly: boolean) {
+export function registerNodeTools(server: McpServer, client: RemnawaveClient) {
     server.tool(
         'nodes_list',
         'List all Remnawave nodes',
@@ -48,8 +48,6 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
             }
         },
     );
-
-    if (readonly) return;
 
     server.tool(
         'nodes_create',

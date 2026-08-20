@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
-export function registerSubPageConfigTools(server: McpServer, client: RemnawaveClient, readonly: boolean) {
+export function registerSubPageConfigTools(server: McpServer, client: RemnawaveClient) {
     server.tool('sub_page_configs_list', 'List all subscription page configurations', {}, async () => {
         try { return toolResult(await client.getSubscriptionPageConfigs()); } catch (e) { return toolError(e); }
     });
@@ -13,8 +13,6 @@ export function registerSubPageConfigTools(server: McpServer, client: RemnawaveC
     }, async ({ uuid }) => {
         try { return toolResult(await client.getSubscriptionPageConfig(uuid)); } catch (e) { return toolError(e); }
     });
-
-    if (readonly) return;
 
     server.tool('sub_page_configs_create', 'Create a subscription page configuration', {
         name: z.string().describe('Config name'),

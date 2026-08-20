@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
-export function registerNodePluginTools(server: McpServer, client: RemnawaveClient, readonly: boolean) {
+export function registerNodePluginTools(server: McpServer, client: RemnawaveClient) {
     server.tool('node_plugins_list', 'List all node plugins', {}, async () => {
         try { return toolResult(await client.getNodePlugins()); } catch (e) { return toolError(e); }
     });
@@ -31,8 +31,6 @@ export function registerNodePluginTools(server: McpServer, client: RemnawaveClie
     server.tool('node_plugins_torrent_stats', 'Get torrent blocker statistics', {}, async () => {
         try { return toolResult(await client.getTorrentBlockerStats()); } catch (e) { return toolError(e); }
     });
-
-    if (readonly) return;
 
     server.tool('node_plugins_create', 'Create a new node plugin', {
         name: z.string().describe('Plugin name'),
