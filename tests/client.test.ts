@@ -1421,4 +1421,69 @@ describe('RemnawaveClient', () => {
             expect(headers['Authorization']).toBe('Bearer test-token');
         });
     });
+
+    describe('support-mode redaction', () => {
+        const userPayload = () => ({
+            response: {
+                users: [
+                    {
+                        id: 1,
+                        username: 'vasya',
+                        trojanPassword: 'trojan-secret',
+                        ssPassword: 'ss-secret',
+                        vlessUuid: '11111111-2222-3333-4444-555555555555',
+                        subscriptionUrl: 'https://panel.example.com/sub/abc',
+                        userTraffic: { usedTrafficBytes: 1, vlessUuid: 'nested-secret' },
+                    },
+                ],
+            },
+        });
+
+        it('strips credentials from nested objects and arrays', async () => {
+            const client = new RemnawaveClient({
+                baseUrl: 'https://panel.example.com',
+                apiToken: 'test-token',
+                isSupport: true,
+            });
+            vi.stubGlobal('fetch', mockFetch(userPayload()));
+
+            const result = (await client.getUserById(1)) as Record<string, any>;
+            const user = result.response.users[0];
+
+            expect(user.trojanPassword).toBeUndefined();
+            expect(user.ssPassword).toBeUndefined();
+            expect(user.vlessUuid).toBeUndefined();
+            expect(user.userTraffic.vlessUuid).toBeUndefined();
+            expect(user.userTraffic.usedTrafficBytes).toBe(1);
+        });
+
+        it('keeps the subscription url', async () => {
+            const client = new RemnawaveClient({
+                baseUrl: 'https://panel.example.com',
+                apiToken: 'test-token',
+                isSupport: true,
+            });
+            vi.stubGlobal('fetch', mockFetch(userPayload()));
+
+            const result = (await client.getUserById(1)) as Record<string, any>;
+
+            expect(result.response.users[0].subscriptionUrl).toBe(
+                'https://panel.example.com/sub/abc',
+            );
+        });
+
+        it('redacts nothing in full mode', async () => {
+            const client = new RemnawaveClient({
+                baseUrl: 'https://panel.example.com',
+                apiToken: 'test-token',
+                isSupport: false,
+            });
+            vi.stubGlobal('fetch', mockFetch(userPayload()));
+
+            const result = (await client.getUserById(1)) as Record<string, any>;
+
+            expect(result.response.users[0].trojanPassword).toBe('trojan-secret');
+            expect(result.response.users[0].userTraffic.vlessUuid).toBe('nested-secret');
+        });
+    });
 });

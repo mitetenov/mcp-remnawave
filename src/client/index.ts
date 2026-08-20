@@ -69,15 +69,42 @@ import type {
     GetNodeUsageCommand,
 } from '@remnawave/backend-contract';
 import { Config, isConfigured } from '../config.js';
+import { REDACTED_FIELDS } from '../support-profile.js';
+
+/**
+ * Deletes credential fields in place, everywhere they appear. The value comes
+ * straight from `res.json()` on every call, so nothing else holds a reference
+ * to it and mutating is safe.
+ */
+function stripCredentials(value: unknown): void {
+    if (Array.isArray(value)) {
+        for (const item of value) {
+            stripCredentials(item);
+        }
+        return;
+    }
+    if (value === null || typeof value !== 'object') {
+        return;
+    }
+    const record = value as Record<string, unknown>;
+    for (const field of REDACTED_FIELDS) {
+        delete record[field];
+    }
+    for (const nested of Object.values(record)) {
+        stripCredentials(nested);
+    }
+}
 
 export class RemnawaveClient {
     private baseUrl: string;
     private headers: Record<string, string>;
     private configured: boolean;
+    private isSupport: boolean;
 
     constructor(config: Config) {
         this.baseUrl = config.baseUrl;
         this.configured = isConfigured(config);
+        this.isSupport = config.isSupport;
         this.headers = {
             Authorization: `Bearer ${config.apiToken}`,
             'Content-Type': 'application/json',
@@ -118,7 +145,11 @@ export class RemnawaveClient {
             }
             throw new Error(`Remnawave API error: ${errorMessage}`);
         }
-        return res.json() as Promise<T>;
+        const data = (await res.json()) as T;
+        if (this.isSupport) {
+            stripCredentials(data);
+        }
+        return data;
     }
 
     private async get<T = unknown>(path: string): Promise<T> {
