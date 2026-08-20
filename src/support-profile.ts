@@ -22,6 +22,10 @@ export const SUPPORT_TOOLS: ReadonlySet<string> = new Set([
     'hwid_devices_list',
     'hwid_device_delete',
     'hwid_devices_delete_all',
+    // Server status, so the bot can answer "is the node I connect through up?".
+    // Node objects also carry infrastructure detail — see REDACTED_FIELDS.
+    'nodes_list',
+    'nodes_get',
 ]);
 
 /** Resources are a second data channel, gated by the same mechanism. */

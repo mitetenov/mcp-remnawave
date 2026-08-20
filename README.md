@@ -17,7 +17,7 @@ MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing
 - **178 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, node integrations, shared lists, connections, bandwidth stats, and metadata
 - **4 resources** — real-time panel stats, node status, health checks, user details
 - **5 prompts** — guided workflows for common tasks
-- **Support mode (default)** — restrict to 13 user-facing tools with credentials stripped, for support bots
+- **Support mode (default)** — restrict to 15 user-facing tools with credentials stripped, for support bots
 - **Caddy support** — `X-Api-Key` header for panels behind Caddy with custom path
 - **Type-safe** — built on [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) for API route validation
 - **stdio transport** — works with Claude Desktop, Cursor, Windsurf, and any MCP-compatible client
@@ -46,6 +46,7 @@ Create a `.env` file or pass environment variables:
 | `REMNAWAVE_API_TOKEN` | Yes | API token from panel settings |
 | `REMNAWAVE_API_KEY` | No | API key for Caddy reverse proxy authentication |
 | `REMNAWAVE_IS_SUPPORT` | No | Support mode, **on by default**. Set to exactly `false` for full access |
+| `REMNAWAVE_TIMEOUT_MS` | No | Per-request timeout in ms (default `30000`). Junk or non-positive values fall back to the default |
 
 ```env
 REMNAWAVE_BASE_URL=https://vpn.example.com
@@ -67,7 +68,7 @@ The `X-Api-Key` header will be added to every request automatically.
 
 The server runs in one of two modes.
 
-**Support mode is the default.** It exposes 13 user-facing tools, 1 resource and
+**Support mode is the default.** It exposes 15 user-facing tools, 1 resource and
 1 prompt, and strips `trojanPassword`, `ssPassword`, `vlessUuid`, `links` and
 `ssConfLinks` from every panel response — the scalar credential fields and the
 `vless://`/`trojan://`/`ss://` URI collections that embed them. `subscriptionUrl`
@@ -89,6 +90,7 @@ Tools available in support mode:
 | Subscription (4) | `subscriptions_get_by_user_id`, `subscriptions_get_by_username`, `subscriptions_get_by_short_uuid`, `subscription_info` |
 | Access and usage (2) | `users_accessible_nodes`, `bandwidth_user_usage` |
 | Devices (3) | `hwid_devices_list`, `hwid_device_delete`, `hwid_devices_delete_all` |
+| Server status (2) | `nodes_list`, `nodes_get` |
 
 Resource: `remnawave://users/{userId}`. Prompt: `user_audit`.
 
@@ -522,7 +524,7 @@ MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), п
 - **178 инструментов** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, интеграциями нод, общими списками, соединениями, статистикой трафика и метаданными
 - **4 ресурса** — статистика панели, статус нод, проверка здоровья, данные пользователя в реальном времени
 - **5 промптов** — пошаговые сценарии для типичных задач
-- **Режим support (по умолчанию)** — 13 пользовательских инструментов с вырезанными кредами, для саппорт-ботов
+- **Режим support (по умолчанию)** — 15 пользовательских инструментов с вырезанными кредами, для саппорт-ботов
 - **Поддержка Caddy** — заголовок `X-Api-Key` для панелей за Caddy с кастомным путём
 - **Type-safe** — построен на [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) для валидации API-маршрутов
 - **stdio транспорт** — работает с Claude Desktop, Cursor, Windsurf и любым MCP-совместимым клиентом
@@ -551,6 +553,7 @@ npm run build
 | `REMNAWAVE_API_TOKEN` | Да | API-токен из настроек панели |
 | `REMNAWAVE_API_KEY` | Нет | API-ключ для аутентификации через Caddy reverse proxy |
 | `REMNAWAVE_IS_SUPPORT` | Нет | Режим support, **включён по умолчанию**. Ровно `false` — полный доступ |
+| `REMNAWAVE_TIMEOUT_MS` | Нет | Таймаут запроса в мс (по умолчанию `30000`). Мусорное или неположительное значение — откат к дефолту |
 
 ```env
 REMNAWAVE_BASE_URL=https://vpn.example.com
@@ -572,7 +575,7 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 
 Сервер работает в одном из двух режимов.
 
-**Support — режим по умолчанию.** Открыто 13 пользовательских инструментов,
+**Support — режим по умолчанию.** Открыто 15 пользовательских инструментов,
 1 ресурс и 1 промпт, а из каждого ответа панели вырезаются `trojanPassword`,
 `ssPassword`, `vlessUuid`, `links` и `ssConfLinks` — скалярные поля с
 учётными данными и коллекции ссылок `vless://`/`trojan://`/`ss://`, в которые
@@ -596,6 +599,7 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 | Подписка (4) | `subscriptions_get_by_user_id`, `subscriptions_get_by_username`, `subscriptions_get_by_short_uuid`, `subscription_info` |
 | Доступ и расход (2) | `users_accessible_nodes`, `bandwidth_user_usage` |
 | Устройства (3) | `hwid_devices_list`, `hwid_device_delete`, `hwid_devices_delete_all` |
+| Статус серверов (2) | `nodes_list`, `nodes_get` |
 
 Ресурс: `remnawave://users/{userId}`. Промпт: `user_audit`.
 
