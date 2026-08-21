@@ -9,7 +9,7 @@ import { restrictToSupport } from './support-filter.js';
 export function createServer(config: Config): McpServer {
     const server = new McpServer({
         name: 'remnawave-mcp',
-        version: '3.2.0',
+        version: '3.2.1',
     });
 
     const client = new RemnawaveClient(config);
