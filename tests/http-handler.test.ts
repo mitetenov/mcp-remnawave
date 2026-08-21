@@ -25,12 +25,12 @@ function response() {
 }
 
 function transportSpy() {
-    const calls: unknown[] = [];
+    const calls: Array<{ method?: string; body?: unknown }> = [];
     return {
         calls,
         transport: {
-            async handleRequest(_req: IncomingMessage, _res: ServerResponse, body?: unknown) {
-                calls.push(body);
+            async handleRequest(req: IncomingMessage, _res: ServerResponse, body?: unknown) {
+                calls.push({ method: req.method, body });
             },
         },
     };
@@ -64,6 +64,18 @@ describe('createHttpHandler', () => {
             res,
         );
 
-        expect(calls).toEqual([{ jsonrpc: '2.0', method: 'tools/list', id: 1 }]);
+        expect(calls).toEqual([{
+            method: 'POST',
+            body: { jsonrpc: '2.0', method: 'tools/list', id: 1 },
+        }]);
+    });
+
+    it('hands DELETE on the MCP endpoint to the session target without parsing a body', async () => {
+        const { transport, calls } = transportSpy();
+        const { res } = response();
+
+        await createHttpHandler(transport)(request('DELETE', '/'), res);
+
+        expect(calls).toEqual([{ method: 'DELETE', body: undefined }]);
     });
 });

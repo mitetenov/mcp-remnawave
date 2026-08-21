@@ -1,6 +1,6 @@
 import http from 'node:http';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createHttpHandler } from './http-handler.js';
+import { HttpSessionManager } from './http-session-manager.js';
 import { loadConfig } from './config.js';
 import { createServer } from './server.js';
 
@@ -8,28 +8,30 @@ const PORT = parseInt(process.env.MCP_HTTP_PORT ?? '3100', 10);
 const HOST = process.env.MCP_HTTP_HOST ?? '0.0.0.0';
 
 const config = loadConfig();
-const mcpServer = createServer(config);
-
-const transport = new StreamableHTTPServerTransport({
-    sessionIdGenerator: () => crypto.randomUUID(),
-});
-
-const httpServer = http.createServer(createHttpHandler(transport));
-
-// Connect the MCP server to the HTTP transport
-await mcpServer.connect(transport);
+const sessions = new HttpSessionManager(() => createServer(config));
+const httpServer = http.createServer(createHttpHandler(sessions));
 
 httpServer.listen(PORT, HOST, () => {
     console.log(`MCP Remnawave HTTP server listening on http://${HOST}:${PORT}`);
 });
 
-// Graceful shutdown
+let shuttingDown = false;
 const shutdown = async () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
     console.log('Shutting down MCP HTTP server...');
-    httpServer.close();
-    await transport.close();
-    process.exit(0);
+    await new Promise<void>((resolve, reject) =>
+        httpServer.close((error) => (error ? reject(error) : resolve())),
+    );
+    await sessions.closeAll();
 };
 
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
+const handleSignal = () => {
+    void shutdown().catch((error) => {
+        console.error('MCP HTTP shutdown failed:', error);
+        process.exitCode = 1;
+    });
+};
+
+process.on('SIGTERM', handleSignal);
+process.on('SIGINT', handleSignal);
