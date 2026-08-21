@@ -10,7 +10,7 @@
 
 MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing LLM clients (Claude Desktop, Cursor, Windsurf, etc.) with tools to manage a [Remnawave](https://github.com/remnawave/) VPN panel.
 
-**Version:** 3.2.0 | **Remnawave panel:** 3.3.x (API contract 3.4.x)
+**Version:** 3.2.1 | **Remnawave panel:** 3.3.x (API contract 3.4.x)
 
 ### Features
 
@@ -159,9 +159,10 @@ docker compose up -d
 
 Environment variables are passed via `.env` file or `docker-compose.yml`.
 
-The container runs the HTTP transport (`dist/http-index.js`) on port 3100. MCP
-itself is POST-only on `/`; `GET /health` answers `200 {"status":"ok"}` and is
-there for container health checks.
+The container runs the sessionful Streamable HTTP transport on port 3100.
+`POST /` initializes a new independent session or routes a request by
+`Mcp-Session-Id`; `DELETE /` terminates that session without affecting other
+clients. `GET /health` answers `200 {"status":"ok"}` for container liveness.
 
 ### Available Tools
 
@@ -533,7 +534,7 @@ MIT
 
 MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), предоставляющий LLM-клиентам (Claude Desktop, Cursor, Windsurf и др.) инструменты для управления VPN-панелью [Remnawave](https://github.com/remnawave/).
 
-**Версия:** 3.2.0 | **Панель Remnawave:** 3.3.x (контракт API 3.4.x)
+**Версия:** 3.2.1 | **Панель Remnawave:** 3.3.x (контракт API 3.4.x)
 
 ### Возможности
 
@@ -683,9 +684,11 @@ docker compose up -d
 
 Переменные окружения передаются через `.env` файл или `docker-compose.yml`.
 
-В контейнере поднимается HTTP-транспорт (`dist/http-index.js`) на порту 3100.
-Сам MCP отвечает только на POST `/`; `GET /health` возвращает
-`200 {"status":"ok"}` — для healthcheck'ов контейнера.
+В контейнере работает sessionful Streamable HTTP-транспорт на порту 3100.
+`POST /` создаёт независимую сессию или маршрутизирует запрос по
+`Mcp-Session-Id`; `DELETE /` завершает только указанную сессию, не затрагивая
+других клиентов. `GET /health` возвращает `200 {"status":"ok"}` для проверки
+живости контейнера.
 
 ### Доступные инструменты
 
