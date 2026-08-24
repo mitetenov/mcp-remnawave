@@ -95,7 +95,7 @@ Tools available in support mode:
 
 | Category | Tools |
 |----------|-------|
-| User lookup (5) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id` |
+| User lookup (6) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_subscription_urls_by_telegram_id` |
 | Subscription (4) | `subscriptions_get_by_user_id`, `subscriptions_get_by_username`, `subscriptions_get_by_short_uuid`, `subscription_info` |
 | Access and usage (2) | `users_accessible_nodes`, `bandwidth_user_usage` |
 | Devices (3) | `hwid_devices_list`, `hwid_device_delete`, `hwid_devices_delete_all` |
@@ -177,6 +177,7 @@ Users are addressed by their numeric `userId` — the panel dropped user UUIDs i
 | `users_get_by_username` | Get user by username | read |
 | `users_get_by_short_uuid` | Get user by short UUID | read |
 | `users_get_by_telegram_id` | Get users by Telegram ID (returns a list) | read |
+| `users_get_subscription_urls_by_telegram_id` | Get only subscription URL(s) for a Telegram user | read |
 | `users_accessible_nodes` | List nodes the user can connect to | read |
 | `users_tags_list` | List all user tags | read |
 | `users_resolve` | Resolve a user by ID, short UUID or username | read |
@@ -620,7 +621,7 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 
 | Категория | Инструменты |
 |-----------|-------------|
-| Поиск пользователя (5) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id` |
+| Поиск пользователя (6) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_subscription_urls_by_telegram_id` |
 | Подписка (4) | `subscriptions_get_by_user_id`, `subscriptions_get_by_username`, `subscriptions_get_by_short_uuid`, `subscription_info` |
 | Доступ и расход (2) | `users_accessible_nodes`, `bandwidth_user_usage` |
 | Устройства (3) | `hwid_devices_list`, `hwid_device_delete`, `hwid_devices_delete_all` |
@@ -703,6 +704,7 @@ docker compose up -d
 | `users_get_by_username` | Получить пользователя по username | read |
 | `users_get_by_short_uuid` | Получить пользователя по short UUID | read |
 | `users_get_by_telegram_id` | Получить пользователей по Telegram ID (список) | read |
+| `users_get_subscription_urls_by_telegram_id` | Получить только URL подписки пользователя по Telegram ID | read |
 | `users_accessible_nodes` | Ноды, доступные пользователю | read |
 | `users_tags_list` | Список тегов пользователей | read |
 | `users_resolve` | Найти пользователя по ID, short UUID или username | read |

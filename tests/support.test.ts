@@ -62,6 +62,7 @@ describe('support mode', () => {
         // The bot's only entry point: it knows the sender's Telegram ID and
         // nothing else about the account.
         expect(tools).toContain('users_get_by_telegram_id');
+        expect(tools).toContain('users_get_subscription_urls_by_telegram_id');
     });
 
     it('every profile name exists in full mode', () => {
@@ -82,9 +83,9 @@ describe('support mode', () => {
     it('full mode filters nothing', () => {
         const { tools, resources, prompts } = collect(false);
 
-        expect(tools).toHaveLength(179);
+        expect(tools).toHaveLength(180);
         expect(resources).toHaveLength(4);
         expect(prompts).toHaveLength(5);
-        expect(new Set(tools).size).toBe(179);
+        expect(new Set(tools).size).toBe(180);
     });
 });
