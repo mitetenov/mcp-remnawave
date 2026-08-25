@@ -261,6 +261,43 @@ describe('HttpSessionManager', () => {
         expect(afterB.status).toBe(404);
     });
 
+    it('closeAll aggregates simultaneous failures from two different sessions, not just the first', async () => {
+        const { url, sessions } = await start();
+        const sessionA = await initialize(url, 'client-a');
+        const sessionB = await initialize(url, 'client-b');
+        await markInitialized(url, sessionA);
+        await markInitialized(url, sessionB);
+
+        // closeAll() builds four closers in Map insertion order — A.transport.close,
+        // A.server.close, B.transport.close, B.server.close — and invokes them
+        // synchronously via Promise.allSettled. McpServer.close() delegates straight
+        // down to the same session's transport.close(), so each session's
+        // "server.close()" entry lands on this same spy immediately after its own
+        // paired transport entry (call #2 for session A, call #4 for session B).
+        // To force session A's AND session B's own transport.close() calls — not
+        // the incidental ones reached via server.close() — to both fail at once,
+        // reject calls #1 and #3 and let the incidental calls #2 and #4 resolve.
+        const errorA = new Error('boom-a');
+        const errorB = new Error('boom-b');
+        const closeSpy = vi.spyOn(NodeStreamableHTTPServerTransport.prototype, 'close')
+            .mockRejectedValueOnce(errorA)
+            .mockResolvedValueOnce(undefined)
+            .mockRejectedValueOnce(errorB)
+            .mockResolvedValueOnce(undefined);
+
+        let caught: unknown;
+        try {
+            await sessions.closeAll();
+        } catch (error) {
+            caught = error;
+        }
+
+        expect(caught).toBeInstanceOf(AggregateError);
+        expect((caught as AggregateError).errors).toHaveLength(2);
+        expect((caught as AggregateError).errors).toEqual(expect.arrayContaining([errorA, errorB]));
+        closeSpy.mockRestore();
+    });
+
     it('does not log the session ID on a rejection', async () => {
         const { url } = await start();
         const sessionId = await initialize(url, 'client-a');

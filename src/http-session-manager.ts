@@ -98,6 +98,12 @@ export class HttpSessionManager implements McpRequestTarget {
         const active = [...new Set(this.sessions.values())];
         this.sessions.clear();
 
+        // session.server.close() cannot fail independently of the transport.close()
+        // above: McpServer.close() delegates straight down to the same underlying
+        // transport's close(), which guards itself with an internal "already closed"
+        // flag — it is listed here for completeness (so a server left connected to a
+        // transport this loop didn't reach would still be closed), not because it is
+        // tracking a distinct failure surface.
         const closers: Array<() => Promise<void>> = active.flatMap((session) => [
             () => session.transport.close(),
             () => session.server.close(),

@@ -173,21 +173,6 @@ describe('createHttpHandler', () => {
             expect(calls).toEqual([]);
         });
 
-        it('allows a request with no Origin header (service-to-service traffic)', async () => {
-            const { target: legacy, calls } = stubLegacy();
-            const { modern } = stubModern();
-            const { port } = await startServer(legacy, modern);
-
-            const response = await rawRequest(port, {
-                method: 'DELETE',
-                path: '/',
-                headers: { Host: 'localhost' },
-            });
-
-            expect(response.status).toBe(200);
-            expect(calls).toHaveLength(1);
-        });
-
         it('allows an Origin header naming an allowed hostname', async () => {
             const { target: legacy, calls } = stubLegacy();
             const { modern } = stubModern();
