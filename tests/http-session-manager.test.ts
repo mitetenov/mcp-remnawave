@@ -1,7 +1,8 @@
 import http, { type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { McpServer } from '@modelcontextprotocol/server';
+import { NodeStreamableHTTPServerTransport, type NodeMcpRequestHandler } from '@modelcontextprotocol/node';
 import * as z from 'zod/v4';
 import { createHttpHandler } from '../src/http-handler.js';
 import { HttpSessionManager } from '../src/http-session-manager.js';
@@ -24,9 +25,18 @@ function testMcpServer(): McpServer {
     return server;
 }
 
+/**
+ * Legacy-only traffic never reaches the modern leg — asserting that here
+ * doubles as coverage that `createHttpHandler` classifies every request this
+ * file sends (handshakes, session POST/GET/DELETE) as legacy.
+ */
+const unreachableModern: NodeMcpRequestHandler = async () => {
+    throw new Error('modern handler must not be invoked by legacy session traffic');
+};
+
 async function start(): Promise<Running> {
     const sessions = new HttpSessionManager(testMcpServer);
-    const server = http.createServer(createHttpHandler(sessions));
+    const server = http.createServer(createHttpHandler({ legacy: sessions, modern: unreachableModern }));
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
     const address = server.address() as AddressInfo;
     const instance = { server, sessions, url: `http://127.0.0.1:${address.port}/` };
@@ -91,8 +101,9 @@ async function markInitialized(url: string, sessionId: string): Promise<void> {
 }
 
 afterEach(async () => {
+    vi.restoreAllMocks();
     for (const instance of running.splice(0)) {
-        await instance.sessions.closeAll();
+        await instance.sessions.closeAll().catch(() => undefined);
         await new Promise<void>((resolve, reject) =>
             instance.server.close((error) => (error ? reject(error) : resolve())),
         );
@@ -178,5 +189,93 @@ describe('HttpSessionManager', () => {
             jsonrpc: '2.0', id: 2, method: 'tools/list', params: {},
         });
         expect(unknown.status).toBe(404);
+    });
+
+    it('routes GET to the session stream and distinguishes missing from unknown sessions the same way', async () => {
+        const { url } = await start();
+        const sessionId = await initialize(url, 'client-a');
+        await markInitialized(url, sessionId);
+
+        const stream = await fetch(url, {
+            method: 'GET',
+            headers: {
+                Accept: 'text/event-stream',
+                'Mcp-Session-Id': sessionId,
+                'Mcp-Protocol-Version': PROTOCOL_VERSION,
+            },
+        });
+        expect(stream.status).toBe(200);
+        await stream.body?.cancel();
+
+        const missing = await fetch(url, {
+            method: 'GET',
+            headers: { Accept: 'text/event-stream' },
+        });
+        expect(missing.status).toBe(400);
+
+        const unknown = await fetch(url, {
+            method: 'GET',
+            headers: {
+                Accept: 'text/event-stream',
+                'Mcp-Session-Id': 'unknown-session',
+                'Mcp-Protocol-Version': PROTOCOL_VERSION,
+            },
+        });
+        expect(unknown.status).toBe(404);
+    });
+
+    it('closeAll aggregates every close failure into one AggregateError without skipping the rest', async () => {
+        const { url, sessions } = await start();
+        const sessionA = await initialize(url, 'client-a');
+        const sessionB = await initialize(url, 'client-b');
+        await markInitialized(url, sessionA);
+        await markInitialized(url, sessionB);
+
+        // Mocking the very first closer (session A's transport.close(), the
+        // first entry closeAll() invokes) avoids racing the onclose-triggered
+        // server.close() side effect that would otherwise consume a mocked
+        // McpServer.prototype.close() rejection before closeAll's own call runs.
+        const closeSpy = vi.spyOn(NodeStreamableHTTPServerTransport.prototype, 'close')
+            .mockRejectedValueOnce(new Error('boom'));
+
+        let caught: unknown;
+        try {
+            await sessions.closeAll();
+        } catch (error) {
+            caught = error;
+        }
+
+        expect(caught).toBeInstanceOf(AggregateError);
+        expect((caught as AggregateError).errors).toHaveLength(1);
+        closeSpy.mockRestore();
+
+        // Both sessions were removed from the map regardless of the one failure —
+        // the map is cleared up front and every close is attempted independently.
+        const afterA = await post(url, sessionA, {
+            jsonrpc: '2.0', id: 5, method: 'tools/list', params: {},
+        });
+        expect(afterA.status).toBe(404);
+        const afterB = await post(url, sessionB, {
+            jsonrpc: '2.0', id: 5, method: 'tools/list', params: {},
+        });
+        expect(afterB.status).toBe(404);
+    });
+
+    it('does not log the session ID on a rejection', async () => {
+        const { url } = await start();
+        const sessionId = await initialize(url, 'client-a');
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+        const unknown = await post(url, 'a-totally-different-session', {
+            jsonrpc: '2.0', id: 1, method: 'tools/list', params: {},
+        });
+        expect(unknown.status).toBe(404);
+
+        for (const call of errorSpy.mock.calls) {
+            for (const arg of call) {
+                expect(String(arg)).not.toContain(sessionId);
+            }
+        }
+        errorSpy.mockRestore();
     });
 });
