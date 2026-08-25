@@ -10,7 +10,7 @@
 
 MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing LLM clients (Claude Desktop, Cursor, Windsurf, etc.) with tools to manage a [Remnawave](https://github.com/remnawave/) VPN panel.
 
-**Version:** 3.2.1 | **Remnawave panel:** 3.3.x (API contract 3.4.x)
+**Version:** 3.3.0 | **Remnawave panel:** 3.3.x (API contract 3.4.x)
 
 ### Features
 
@@ -159,10 +159,29 @@ docker compose up -d
 
 Environment variables are passed via `.env` file or `docker-compose.yml`.
 
-The container runs the sessionful Streamable HTTP transport on port 3100.
-`POST /` initializes a new independent session or routes a request by
-`Mcp-Session-Id`; `DELETE /` terminates that session without affecting other
-clients. `GET /health` answers `200 {"status":"ok"}` for container liveness.
+The container serves both MCP protocol eras on the same `/` endpoint on port
+3100, built on TypeScript MCP SDK packages `@modelcontextprotocol/server` and
+`@modelcontextprotocol/node` at `2.0.0`. Clients negotiating the modern
+`2026-07-28` protocol version get fully stateless handling: no
+`Mcp-Session-Id` is ever issued or required, and each request is independent.
+Clients on protocol version `2025-11-25` or earlier keep the sessionful
+Streamable HTTP behavior unchanged: `POST /` initializes a new independent
+session or routes a request by `Mcp-Session-Id`, `GET /` resumes that
+session's SSE stream, and `DELETE /` terminates that session without
+affecting other clients. `GET /health` still answers `200 {"status":"ok"}`
+for container liveness.
+
+### Upgrading to 3.3.0
+
+This release changes only how the HTTP transport is served internally —
+tool behavior, the `/` endpoint, and `/health` are unchanged. Because the
+legacy sessionful era (`2025-11-25` and earlier) is still fully served
+alongside the new stateless `2026-07-28` era, an old supportBot client that
+hasn't been updated keeps working unmodified against a 3.3.0 server during a
+server-first rollout. Conversely, once supportBot is updated to speak the
+modern era, it can still fall back to the legacy era against an older
+server, so rolling this server back to `v3.2.1` remains a safe option if
+needed.
 
 ### Available Tools
 
@@ -534,7 +553,7 @@ MIT
 
 MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), предоставляющий LLM-клиентам (Claude Desktop, Cursor, Windsurf и др.) инструменты для управления VPN-панелью [Remnawave](https://github.com/remnawave/).
 
-**Версия:** 3.2.1 | **Панель Remnawave:** 3.3.x (контракт API 3.4.x)
+**Версия:** 3.3.0 | **Панель Remnawave:** 3.3.x (контракт API 3.4.x)
 
 ### Возможности
 
@@ -684,11 +703,30 @@ docker compose up -d
 
 Переменные окружения передаются через `.env` файл или `docker-compose.yml`.
 
-В контейнере работает sessionful Streamable HTTP-транспорт на порту 3100.
+Контейнер обслуживает обе эры протокола MCP на одном и том же эндпоинте `/`
+на порту 3100, на базе пакетов TypeScript MCP SDK `@modelcontextprotocol/server`
+и `@modelcontextprotocol/node` версии `2.0.0`. Клиенты, согласующие
+современную версию протокола `2026-07-28`, получают полностью
+stateless-обработку: `Mcp-Session-Id` никогда не выдаётся и не требуется,
+каждый запрос независим. Клиенты на версии протокола `2025-11-25` и старше
+сохраняют прежнее sessionful-поведение Streamable HTTP без изменений:
 `POST /` создаёт независимую сессию или маршрутизирует запрос по
-`Mcp-Session-Id`; `DELETE /` завершает только указанную сессию, не затрагивая
-других клиентов. `GET /health` возвращает `200 {"status":"ok"}` для проверки
+`Mcp-Session-Id`, `GET /` возобновляет SSE-поток этой сессии, а `DELETE /`
+завершает только указанную сессию, не затрагивая других клиентов.
+`GET /health` по-прежнему возвращает `200 {"status":"ok"}` для проверки
 живости контейнера.
+
+### Обновление до 3.3.0
+
+Этот релиз меняет только внутреннюю реализацию HTTP-транспорта — поведение
+инструментов, эндпоинт `/` и `/health` не изменились. Поскольку устаревшая
+sessionful-эра (`2025-11-25` и старше) по-прежнему полностью обслуживается
+наряду с новой stateless-эрой `2026-07-28`, старый клиент supportBot, который
+ещё не обновлён, продолжает работать без изменений с сервером версии 3.3.0
+во время поэтапного (server-first) перехода. И наоборот, после обновления
+supportBot до поддержки современной эры он всё ещё может переключиться на
+устаревшую эру при работе со старым сервером, поэтому откат этого сервера до
+`v3.2.1` остаётся безопасным вариантом при необходимости.
 
 ### Доступные инструменты
 
