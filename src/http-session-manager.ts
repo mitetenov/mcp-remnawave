@@ -1,14 +1,31 @@
 import { randomUUID } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
+import { McpServer, isInitializeRequest } from '@modelcontextprotocol/server';
+import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
 import type { McpRequestTarget } from './http-handler.js';
 
 type ServerFactory = () => McpServer;
 
+/**
+ * One legacy (2025-era) session: the transport that owns the HTTP exchange
+ * and the server instance connected to it. Both are closed together — a
+ * session that outlives its server would leak registered tools/resources;
+ * a server outliving its transport would leak the connection.
+ */
+type LegacySession = {
+    transport: NodeStreamableHTTPServerTransport;
+    server: McpServer;
+};
+
+/**
+ * Owns every 2025-era (sessionful) Streamable HTTP exchange: the `initialize`
+ * handshake, independent per-session GET (SSE resume) and POST traffic, and
+ * DELETE session termination. This is the only owner of handshake traffic —
+ * the modern (2026-07-28) leg served alongside it is stateless and never
+ * issues or consumes a session ID.
+ */
 export class HttpSessionManager implements McpRequestTarget {
-    private readonly transports = new Map<string, StreamableHTTPServerTransport>();
+    private readonly sessions = new Map<string, LegacySession>();
 
     constructor(private readonly serverFactory: ServerFactory) {}
 
@@ -24,12 +41,26 @@ export class HttpSessionManager implements McpRequestTarget {
                 this.reject(res, 400, 'Bad Request: No session ID provided');
                 return;
             }
-            const transport = this.transports.get(sessionId);
-            if (!transport) {
+            const session = this.sessions.get(sessionId);
+            if (!session) {
                 this.reject(res, 404, 'Session not found');
                 return;
             }
-            await transport.handleRequest(req, res);
+            await session.transport.handleRequest(req, res);
+            return;
+        }
+
+        if (req.method === 'GET') {
+            if (!sessionId) {
+                this.reject(res, 400, 'Bad Request: No session ID provided');
+                return;
+            }
+            const session = this.sessions.get(sessionId);
+            if (!session) {
+                this.reject(res, 404, 'Session not found');
+                return;
+            }
+            await session.transport.handleRequest(req, res);
             return;
         }
 
@@ -39,12 +70,12 @@ export class HttpSessionManager implements McpRequestTarget {
         }
 
         if (sessionId) {
-            const transport = this.transports.get(sessionId);
-            if (!transport) {
+            const session = this.sessions.get(sessionId);
+            if (!session) {
                 this.reject(res, 404, 'Session not found');
                 return;
             }
-            await transport.handleRequest(req, res, body);
+            await session.transport.handleRequest(req, res, body);
             return;
         }
 
@@ -56,10 +87,29 @@ export class HttpSessionManager implements McpRequestTarget {
         await this.initialize(req, res, body);
     }
 
+    /**
+     * Closes every open session. The map is cleared first so any `onclose`
+     * callback fired by the closes below finds nothing left to remove.
+     * Every unique transport and server is closed independently via
+     * `Promise.allSettled` so one failure never stops the rest from closing;
+     * every failure is collected into a single thrown `AggregateError`.
+     */
     async closeAll(): Promise<void> {
-        const active = [...new Set(this.transports.values())];
-        this.transports.clear();
-        const results = await Promise.allSettled(active.map((transport) => transport.close()));
+        const active = [...new Set(this.sessions.values())];
+        this.sessions.clear();
+
+        // session.server.close() cannot fail independently of the transport.close()
+        // above: McpServer.close() delegates straight down to the same underlying
+        // transport's close(), which guards itself with an internal "already closed"
+        // flag — it is listed here for completeness (so a server left connected to a
+        // transport this loop didn't reach would still be closed), not because it is
+        // tracking a distinct failure surface.
+        const closers: Array<() => Promise<void>> = active.flatMap((session) => [
+            () => session.transport.close(),
+            () => session.server.close(),
+        ]);
+
+        const results = await Promise.allSettled(closers.map((close) => close()));
         const failures = results
             .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
             .map((result) => result.reason);
@@ -73,30 +123,31 @@ export class HttpSessionManager implements McpRequestTarget {
         res: ServerResponse,
         body: unknown,
     ): Promise<void> {
-        let transport!: StreamableHTTPServerTransport;
-        transport = new StreamableHTTPServerTransport({
+        const server = this.serverFactory();
+        const transport = new NodeStreamableHTTPServerTransport({
             sessionIdGenerator: randomUUID,
             onsessioninitialized: (sessionId) => {
-                this.transports.set(sessionId, transport);
+                this.sessions.set(sessionId, { transport, server });
             },
         });
         transport.onclose = () => {
             const sessionId = transport.sessionId;
             if (sessionId) {
-                this.transports.delete(sessionId);
+                this.sessions.delete(sessionId);
             }
+            server.close().catch(() => undefined);
         };
 
-        const server = this.serverFactory();
         try {
             await server.connect(transport);
             await transport.handleRequest(req, res, body);
         } catch (error) {
             const sessionId = transport.sessionId;
             if (sessionId) {
-                this.transports.delete(sessionId);
+                this.sessions.delete(sessionId);
             }
             await transport.close().catch(() => undefined);
+            await server.close().catch(() => undefined);
             throw error;
         }
     }
@@ -106,6 +157,10 @@ export class HttpSessionManager implements McpRequestTarget {
         return typeof value === 'string' && value.length > 0 ? value : undefined;
     }
 
+    /**
+     * Never includes the session ID: only a fixed message and status are
+     * written to the response or logged by callers of this class.
+     */
     private reject(res: ServerResponse, status: number, message: string): void {
         res.writeHead(status, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
