@@ -34,11 +34,21 @@ const shutdown = async () => {
     if (shuttingDown) return;
     shuttingDown = true;
     console.log('Shutting down MCP HTTP server...');
-    await new Promise<void>((resolve, reject) =>
-        httpServer.close((error) => (error ? reject(error) : resolve())),
-    );
 
-    const results = await Promise.allSettled([modern.close(), legacy.closeAll()]);
+    const serverClose = new Promise<void>((resolve, reject) => {
+        httpServer.close((error) => (error ? reject(error) : resolve()));
+    });
+
+    if (typeof httpServer.closeIdleConnections === 'function') {
+        httpServer.closeIdleConnections();
+    }
+
+    const results = await Promise.allSettled([
+        serverClose,
+        modern.close(),
+        legacy.closeAll(),
+    ]);
+
     const failures = results
         .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
         .map((result) => result.reason);
