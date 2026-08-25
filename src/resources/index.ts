@@ -1,11 +1,11 @@
-import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { RemnawaveClient } from '../client/index.js';
 
 export function registerAllResources(
     server: McpServer,
     client: RemnawaveClient,
 ) {
-    server.resource(
+    server.registerResource(
         'panel-stats',
         'remnawave://stats',
         {
@@ -27,7 +27,7 @@ export function registerAllResources(
         },
     );
 
-    server.resource(
+    server.registerResource(
         'panel-nodes',
         'remnawave://nodes',
         {
@@ -48,7 +48,7 @@ export function registerAllResources(
         },
     );
 
-    server.resource(
+    server.registerResource(
         'panel-health',
         'remnawave://health',
         {
@@ -69,7 +69,7 @@ export function registerAllResources(
         },
     );
 
-    server.resource(
+    server.registerResource(
         'user-details',
         new ResourceTemplate('remnawave://users/{userId}', {
             list: undefined,

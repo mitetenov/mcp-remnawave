@@ -1,5 +1,5 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
+import { McpServer } from '@modelcontextprotocol/server';
+import * as z from 'zod/v4';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
@@ -7,10 +7,12 @@ export function registerInboundTools(
     server: McpServer,
     client: RemnawaveClient,
 ) {
-    server.tool(
+    server.registerTool(
         'config_profiles_list',
-        'List all config profiles',
-        {},
+        {
+            description: 'List all config profiles',
+            inputSchema: z.object({}),
+        },
         async () => {
             try {
                 const result = await client.getConfigProfiles();
@@ -21,11 +23,13 @@ export function registerInboundTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'config_profiles_get',
-        'Get a config profile by UUID',
         {
-            uuid: z.string().describe('Config profile UUID'),
+            description: 'Get a config profile by UUID',
+            inputSchema: z.object({
+                uuid: z.string().describe('Config profile UUID'),
+            }),
         },
         async ({ uuid }) => {
             try {
@@ -37,10 +41,12 @@ export function registerInboundTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'inbounds_list',
-        'List all inbounds from all config profiles',
-        {},
+        {
+            description: 'List all inbounds from all config profiles',
+            inputSchema: z.object({}),
+        },
         async () => {
             try {
                 const result = await client.getAllInbounds();
@@ -51,11 +57,13 @@ export function registerInboundTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'config_profiles_get_inbounds',
-        'Get inbounds for a specific config profile',
         {
-            uuid: z.string().describe('Config profile UUID'),
+            description: 'Get inbounds for a specific config profile',
+            inputSchema: z.object({
+                uuid: z.string().describe('Config profile UUID'),
+            }),
         },
         async ({ uuid }) => {
             try {
@@ -67,11 +75,13 @@ export function registerInboundTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'config_profiles_get_computed_config',
-        'Get computed configuration for a config profile',
         {
-            uuid: z.string().describe('Config profile UUID'),
+            description: 'Get computed configuration for a config profile',
+            inputSchema: z.object({
+                uuid: z.string().describe('Config profile UUID'),
+            }),
         },
         async ({ uuid }) => {
             try {
@@ -83,12 +93,14 @@ export function registerInboundTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'config_profiles_create',
-        'Create a new config profile',
         {
-            name: z.string().describe('Profile name'),
-            config: z.object({}).catchall(z.unknown()).describe('Config profile configuration object'),
+            description: 'Create a new config profile',
+            inputSchema: z.object({
+                name: z.string().describe('Profile name'),
+                config: z.object({}).catchall(z.unknown()).describe('Config profile configuration object'),
+            }),
         },
         async (params) => {
             try {
@@ -100,12 +112,14 @@ export function registerInboundTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'config_profiles_update',
-        'Update a config profile',
         {
-            uuid: z.string().describe('Profile UUID'),
-            name: z.string().optional().describe('New name'),
+            description: 'Update a config profile',
+            inputSchema: z.object({
+                uuid: z.string().describe('Profile UUID'),
+                name: z.string().optional().describe('New name'),
+            }),
         },
         async (params) => {
             try {
@@ -117,11 +131,13 @@ export function registerInboundTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'config_profiles_delete',
-        'Delete a config profile',
         {
-            uuid: z.string().describe('Profile UUID'),
+            description: 'Delete a config profile',
+            inputSchema: z.object({
+                uuid: z.string().describe('Profile UUID'),
+            }),
         },
         async ({ uuid }) => {
             try {
@@ -133,14 +149,16 @@ export function registerInboundTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'config_profiles_reorder',
-        'Reorder config profiles',
         {
-            items: z.array(z.object({
-                viewPosition: z.number().describe('Sort position (0-based)'),
-                uuid: z.string().describe('Config profile UUID'),
-            })).describe('Ordered array of { viewPosition, uuid } objects'),
+            description: 'Reorder config profiles',
+            inputSchema: z.object({
+                items: z.array(z.object({
+                    viewPosition: z.number().describe('Sort position (0-based)'),
+                    uuid: z.string().describe('Config profile UUID'),
+                })).describe('Ordered array of { viewPosition, uuid } objects'),
+            }),
         },
         async (params) => {
             try {

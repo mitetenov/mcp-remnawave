@@ -1,4 +1,4 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer } from '@modelcontextprotocol/server';
 import {
     SUPPORT_PROMPTS,
     SUPPORT_RESOURCES,
@@ -6,16 +6,13 @@ import {
 } from './support-profile.js';
 
 /**
- * McpServer exposes both the short registration methods and the newer
- * `register*` aliases. Both are gated: intercepting only one set would leave a
- * hole the moment anyone reaches for the other.
+ * SDK v2 removed the short registration aliases (`tool`/`resource`/`prompt`);
+ * `registerTool`/`registerResource`/`registerPrompt` are the only entry points
+ * left, so gating them is sufficient.
  */
 const GATED_METHODS: Record<string, ReadonlySet<string>> = {
-    tool: SUPPORT_TOOLS,
     registerTool: SUPPORT_TOOLS,
-    resource: SUPPORT_RESOURCES,
     registerResource: SUPPORT_RESOURCES,
-    prompt: SUPPORT_PROMPTS,
     registerPrompt: SUPPORT_PROMPTS,
 };
 

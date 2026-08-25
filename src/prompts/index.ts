@@ -1,12 +1,14 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
+import { McpServer } from '@modelcontextprotocol/server';
+import * as z from 'zod/v4';
 
 export function registerAllPrompts(server: McpServer) {
-    server.prompt(
+    server.registerPrompt(
         'create_user_wizard',
-        'Step-by-step guide to create a new VPN user',
         {
-            username: z.string().describe('Username for the new user'),
+            description: 'Step-by-step guide to create a new VPN user',
+            argsSchema: z.object({
+                username: z.string().describe('Username for the new user'),
+            }),
         },
         async ({ username }) => ({
             messages: [
@@ -27,11 +29,13 @@ export function registerAllPrompts(server: McpServer) {
         }),
     );
 
-    server.prompt(
+    server.registerPrompt(
         'node_diagnostics',
-        'Diagnose issues with a specific node',
         {
-            nodeUuid: z.string().describe('UUID of the node to diagnose'),
+            description: 'Diagnose issues with a specific node',
+            argsSchema: z.object({
+                nodeUuid: z.string().describe('UUID of the node to diagnose'),
+            }),
         },
         async ({ nodeUuid }) => ({
             messages: [
@@ -53,18 +57,20 @@ export function registerAllPrompts(server: McpServer) {
         }),
     );
 
-    server.prompt(
+    server.registerPrompt(
         'traffic_report',
-        'Generate a traffic usage report',
         {
-            startDate: z
-                .string()
-                .optional()
-                .describe('Start date (ISO 8601)'),
-            endDate: z
-                .string()
-                .optional()
-                .describe('End date (ISO 8601)'),
+            description: 'Generate a traffic usage report',
+            argsSchema: z.object({
+                startDate: z
+                    .string()
+                    .optional()
+                    .describe('Start date (ISO 8601)'),
+                endDate: z
+                    .string()
+                    .optional()
+                    .describe('End date (ISO 8601)'),
+            }),
         },
         async ({ startDate, endDate }) => {
             const period = startDate && endDate
@@ -95,11 +101,13 @@ export function registerAllPrompts(server: McpServer) {
         },
     );
 
-    server.prompt(
+    server.registerPrompt(
         'user_audit',
-        'Complete audit of a specific user',
         {
-            userId: z.string().describe('User ID to audit'),
+            description: 'Complete audit of a specific user',
+            argsSchema: z.object({
+                userId: z.string().describe('User ID to audit'),
+            }),
         },
         async ({ userId }) => ({
             messages: [
@@ -125,10 +133,12 @@ export function registerAllPrompts(server: McpServer) {
         }),
     );
 
-    server.prompt(
+    server.registerPrompt(
         'bulk_user_cleanup',
-        'Find and manage expired or inactive users',
-        {},
+        {
+            description: 'Find and manage expired or inactive users',
+            argsSchema: z.object({}),
+        },
         async () => ({
             messages: [
                 {

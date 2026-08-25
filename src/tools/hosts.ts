@@ -1,5 +1,5 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
+import { McpServer } from '@modelcontextprotocol/server';
+import * as z from 'zod/v4';
 import type { CreateHostCommand, UpdateHostCommand } from '@remnawave/backend-contract';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
@@ -7,10 +7,12 @@ import { toolResult, toolError } from './helpers.js';
 const SUBSCRIPTION_TYPES = ['XRAY_JSON', 'XRAY_BASE64', 'MIHOMO', 'STASH', 'CLASH', 'SINGBOX'] as const;
 
 export function registerHostTools(server: McpServer, client: RemnawaveClient) {
-    server.tool(
+    server.registerTool(
         'hosts_list',
-        'List all Remnawave hosts',
-        {},
+        {
+            description: 'List all Remnawave hosts',
+            inputSchema: z.object({}),
+        },
         async () => {
             try {
                 const result = await client.getHosts();
@@ -21,11 +23,13 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'hosts_get',
-        'Get a specific host by UUID',
         {
-            uuid: z.string().describe('Host UUID'),
+            description: 'Get a specific host by UUID',
+            inputSchema: z.object({
+                uuid: z.string().describe('Host UUID'),
+            }),
         },
         async ({ uuid }) => {
             try {
@@ -37,10 +41,12 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'hosts_tags_list',
-        'List all host tags',
-        {},
+        {
+            description: 'List all host tags',
+            inputSchema: z.object({}),
+        },
         async () => {
             try {
                 const result = await client.getHostTags();
@@ -51,103 +57,105 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'hosts_create',
-        'Create a new host in Remnawave',
         {
-            remark: z.string().describe('Host remark/name'),
-            address: z.string().describe('Host address'),
-            port: z.number().describe('Host port'),
-            configProfileUuid: z
-                .string()
-                .describe('Config profile UUID'),
-            configProfileInboundUuid: z
-                .string()
-                .describe('Config profile inbound UUID'),
-            path: z.string().optional().describe('URL path'),
-            sni: z.string().optional().describe('SNI (Server Name Indication)'),
-            host: z.string().optional().describe('Host header'),
-            alpn: z
-                .enum(['h3', 'h2', 'http/1.1', 'h2,http/1.1', 'h3,h2,http/1.1', 'h3,h2'])
-                .optional()
-                .describe('ALPN protocol'),
-            fingerprint: z
-                .string()
-                .optional()
-                .describe('TLS fingerprint (free string in Remnawave 2.8+)'),
-            isDisabled: z
-                .boolean()
-                .optional()
-                .describe('Create in disabled state'),
-            isHidden: z
-                .boolean()
-                .optional()
-                .describe('Hide from subscription list'),
-            securityLayer: z
-                .enum(['DEFAULT', 'TLS', 'NONE'])
-                .optional()
-                .describe('Security layer'),
-            tags: z
-                .array(z.string())
-                .max(10)
-                .optional()
-                .describe('Host tags (max 10, Remnawave 2.8+)'),
-            serverDescription: z
-                .string()
-                .optional()
-                .describe('Server description'),
-            nodes: z
-                .array(z.string())
-                .optional()
-                .describe('Array of node UUIDs to assign'),
-            excludeFromSubscriptionTypes: z
-                .array(z.enum(SUBSCRIPTION_TYPES))
-                .optional()
-                .describe('Subscription types to exclude this host from'),
-            xrayJsonTemplateUuid: z
-                .string()
-                .optional()
-                .describe('Xray JSON template UUID'),
-            excludedInternalSquads: z
-                .array(z.string())
-                .optional()
-                .describe('Internal squad UUIDs to exclude host from'),
-            overrideSniFromAddress: z
-                .boolean()
-                .optional()
-                .describe('Override SNI from address'),
-            keepSniBlank: z
-                .boolean()
-                .optional()
-                .describe('Keep SNI field blank'),
-            allowInsecure: z
-                .boolean()
-                .optional()
-                .describe('Allow insecure connections'),
-            vlessRouteId: z
-                .number()
-                .optional()
-                .describe('VLESS route ID (0-65535)'),
-            shuffleHost: z
-                .boolean()
-                .optional()
-                .describe('Enable host shuffling'),
-            mihomoX25519: z
-                .boolean()
-                .optional()
-                .describe('Enable Mihomo X25519'),
-            mihomoIpVersion: z
-                .enum(['dual', 'ipv4', 'ipv6', 'ipv4-prefer', 'ipv6-prefer'])
-                .optional()
-                .describe('Mihomo IP version (Remnawave 2.8+)'),
-            pinnedPeerCertSha256: z
-                .string()
-                .optional()
-                .describe('Pinned peer certificate SHA256 (replaces allowInsecure)'),
-            verifyPeerCertByName: z
-                .boolean()
-                .optional()
-                .describe('Verify peer certificate by name (Remnawave 2.8+)'),
+            description: 'Create a new host in Remnawave',
+            inputSchema: z.object({
+                remark: z.string().describe('Host remark/name'),
+                address: z.string().describe('Host address'),
+                port: z.number().describe('Host port'),
+                configProfileUuid: z
+                    .string()
+                    .describe('Config profile UUID'),
+                configProfileInboundUuid: z
+                    .string()
+                    .describe('Config profile inbound UUID'),
+                path: z.string().optional().describe('URL path'),
+                sni: z.string().optional().describe('SNI (Server Name Indication)'),
+                host: z.string().optional().describe('Host header'),
+                alpn: z
+                    .enum(['h3', 'h2', 'http/1.1', 'h2,http/1.1', 'h3,h2,http/1.1', 'h3,h2'])
+                    .optional()
+                    .describe('ALPN protocol'),
+                fingerprint: z
+                    .string()
+                    .optional()
+                    .describe('TLS fingerprint (free string in Remnawave 2.8+)'),
+                isDisabled: z
+                    .boolean()
+                    .optional()
+                    .describe('Create in disabled state'),
+                isHidden: z
+                    .boolean()
+                    .optional()
+                    .describe('Hide from subscription list'),
+                securityLayer: z
+                    .enum(['DEFAULT', 'TLS', 'NONE'])
+                    .optional()
+                    .describe('Security layer'),
+                tags: z
+                    .array(z.string())
+                    .max(10)
+                    .optional()
+                    .describe('Host tags (max 10, Remnawave 2.8+)'),
+                serverDescription: z
+                    .string()
+                    .optional()
+                    .describe('Server description'),
+                nodes: z
+                    .array(z.string())
+                    .optional()
+                    .describe('Array of node UUIDs to assign'),
+                excludeFromSubscriptionTypes: z
+                    .array(z.enum(SUBSCRIPTION_TYPES))
+                    .optional()
+                    .describe('Subscription types to exclude this host from'),
+                xrayJsonTemplateUuid: z
+                    .string()
+                    .optional()
+                    .describe('Xray JSON template UUID'),
+                excludedInternalSquads: z
+                    .array(z.string())
+                    .optional()
+                    .describe('Internal squad UUIDs to exclude host from'),
+                overrideSniFromAddress: z
+                    .boolean()
+                    .optional()
+                    .describe('Override SNI from address'),
+                keepSniBlank: z
+                    .boolean()
+                    .optional()
+                    .describe('Keep SNI field blank'),
+                allowInsecure: z
+                    .boolean()
+                    .optional()
+                    .describe('Allow insecure connections'),
+                vlessRouteId: z
+                    .number()
+                    .optional()
+                    .describe('VLESS route ID (0-65535)'),
+                shuffleHost: z
+                    .boolean()
+                    .optional()
+                    .describe('Enable host shuffling'),
+                mihomoX25519: z
+                    .boolean()
+                    .optional()
+                    .describe('Enable Mihomo X25519'),
+                mihomoIpVersion: z
+                    .enum(['dual', 'ipv4', 'ipv6', 'ipv4-prefer', 'ipv6-prefer'])
+                    .optional()
+                    .describe('Mihomo IP version (Remnawave 2.8+)'),
+                pinnedPeerCertSha256: z
+                    .string()
+                    .optional()
+                    .describe('Pinned peer certificate SHA256 (replaces allowInsecure)'),
+                verifyPeerCertByName: z
+                    .boolean()
+                    .optional()
+                    .describe('Verify peer certificate by name (Remnawave 2.8+)'),
+            }),
         },
         async (params) => {
             try {
@@ -208,96 +216,98 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'hosts_update',
-        'Update an existing host',
         {
-            uuid: z.string().describe('Host UUID to update'),
-            remark: z.string().optional().describe('New remark/name'),
-            address: z.string().optional().describe('New address'),
-            port: z.number().optional().describe('New port'),
-            configProfileUuid: z.string().optional().describe('New config profile UUID'),
-            configProfileInboundUuid: z.string().optional().describe('New config profile inbound UUID'),
-            path: z.string().optional().describe('New URL path'),
-            sni: z.string().optional().describe('New SNI'),
-            host: z.string().optional().describe('New host header'),
-            alpn: z
-                .enum(['h3', 'h2', 'http/1.1', 'h2,http/1.1', 'h3,h2,http/1.1', 'h3,h2'])
-                .optional()
-                .describe('New ALPN'),
-            fingerprint: z
-                .string()
-                .optional()
-                .describe('New fingerprint (free string in Remnawave 2.8+)'),
-            isDisabled: z
-                .boolean()
-                .optional()
-                .describe('Enable/disable host'),
-            isHidden: z
-                .boolean()
-                .optional()
-                .describe('Hide from subscription list'),
-            securityLayer: z
-                .enum(['DEFAULT', 'TLS', 'NONE'])
-                .optional()
-                .describe('New security layer'),
-            tags: z
-                .array(z.string())
-                .max(10)
-                .optional()
-                .describe('New tags (max 10, Remnawave 2.8+)'),
-            serverDescription: z
-                .string()
-                .optional()
-                .describe('New server description'),
-            nodes: z
-                .array(z.string())
-                .optional()
-                .describe('New node UUIDs'),
-            excludeFromSubscriptionTypes: z
-                .array(z.enum(SUBSCRIPTION_TYPES))
-                .optional()
-                .describe('Subscription types to exclude this host from'),
-            xrayJsonTemplateUuid: z
-                .string()
-                .optional()
-                .describe('Xray JSON template UUID'),
-            excludedInternalSquads: z
-                .array(z.string())
-                .optional()
-                .describe('Internal squad UUIDs to exclude host from'),
-            overrideSniFromAddress: z
-                .boolean()
-                .optional()
-                .describe('Override SNI from address'),
-            keepSniBlank: z
-                .boolean()
-                .optional()
-                .describe('Keep SNI field blank'),
-            vlessRouteId: z
-                .number()
-                .optional()
-                .describe('VLESS route ID (0-65535)'),
-            shuffleHost: z
-                .boolean()
-                .optional()
-                .describe('Enable host shuffling'),
-            mihomoX25519: z
-                .boolean()
-                .optional()
-                .describe('Enable Mihomo X25519'),
-            mihomoIpVersion: z
-                .enum(['dual', 'ipv4', 'ipv6', 'ipv4-prefer', 'ipv6-prefer'])
-                .optional()
-                .describe('Mihomo IP version (Remnawave 2.8+)'),
-            pinnedPeerCertSha256: z
-                .string()
-                .optional()
-                .describe('Pinned peer certificate SHA256 (replaces allowInsecure)'),
-            verifyPeerCertByName: z
-                .boolean()
-                .optional()
-                .describe('Verify peer certificate by name (Remnawave 2.8+)'),
+            description: 'Update an existing host',
+            inputSchema: z.object({
+                uuid: z.string().describe('Host UUID to update'),
+                remark: z.string().optional().describe('New remark/name'),
+                address: z.string().optional().describe('New address'),
+                port: z.number().optional().describe('New port'),
+                configProfileUuid: z.string().optional().describe('New config profile UUID'),
+                configProfileInboundUuid: z.string().optional().describe('New config profile inbound UUID'),
+                path: z.string().optional().describe('New URL path'),
+                sni: z.string().optional().describe('New SNI'),
+                host: z.string().optional().describe('New host header'),
+                alpn: z
+                    .enum(['h3', 'h2', 'http/1.1', 'h2,http/1.1', 'h3,h2,http/1.1', 'h3,h2'])
+                    .optional()
+                    .describe('New ALPN'),
+                fingerprint: z
+                    .string()
+                    .optional()
+                    .describe('New fingerprint (free string in Remnawave 2.8+)'),
+                isDisabled: z
+                    .boolean()
+                    .optional()
+                    .describe('Enable/disable host'),
+                isHidden: z
+                    .boolean()
+                    .optional()
+                    .describe('Hide from subscription list'),
+                securityLayer: z
+                    .enum(['DEFAULT', 'TLS', 'NONE'])
+                    .optional()
+                    .describe('New security layer'),
+                tags: z
+                    .array(z.string())
+                    .max(10)
+                    .optional()
+                    .describe('New tags (max 10, Remnawave 2.8+)'),
+                serverDescription: z
+                    .string()
+                    .optional()
+                    .describe('New server description'),
+                nodes: z
+                    .array(z.string())
+                    .optional()
+                    .describe('New node UUIDs'),
+                excludeFromSubscriptionTypes: z
+                    .array(z.enum(SUBSCRIPTION_TYPES))
+                    .optional()
+                    .describe('Subscription types to exclude this host from'),
+                xrayJsonTemplateUuid: z
+                    .string()
+                    .optional()
+                    .describe('Xray JSON template UUID'),
+                excludedInternalSquads: z
+                    .array(z.string())
+                    .optional()
+                    .describe('Internal squad UUIDs to exclude host from'),
+                overrideSniFromAddress: z
+                    .boolean()
+                    .optional()
+                    .describe('Override SNI from address'),
+                keepSniBlank: z
+                    .boolean()
+                    .optional()
+                    .describe('Keep SNI field blank'),
+                vlessRouteId: z
+                    .number()
+                    .optional()
+                    .describe('VLESS route ID (0-65535)'),
+                shuffleHost: z
+                    .boolean()
+                    .optional()
+                    .describe('Enable host shuffling'),
+                mihomoX25519: z
+                    .boolean()
+                    .optional()
+                    .describe('Enable Mihomo X25519'),
+                mihomoIpVersion: z
+                    .enum(['dual', 'ipv4', 'ipv6', 'ipv4-prefer', 'ipv6-prefer'])
+                    .optional()
+                    .describe('Mihomo IP version (Remnawave 2.8+)'),
+                pinnedPeerCertSha256: z
+                    .string()
+                    .optional()
+                    .describe('Pinned peer certificate SHA256 (replaces allowInsecure)'),
+                verifyPeerCertByName: z
+                    .boolean()
+                    .optional()
+                    .describe('Verify peer certificate by name (Remnawave 2.8+)'),
+            }),
         },
         async (params) => {
             try {
@@ -317,11 +327,13 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'hosts_delete',
-        'Delete a host from Remnawave',
         {
-            uuid: z.string().describe('Host UUID to delete'),
+            description: 'Delete a host from Remnawave',
+            inputSchema: z.object({
+                uuid: z.string().describe('Host UUID to delete'),
+            }),
         },
         async ({ uuid }) => {
             try {
@@ -336,52 +348,62 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'hosts_bulk_enable',
-        'Bulk enable selected hosts',
-        { uuids: z.array(z.string()).describe('Array of host UUIDs') },
+        {
+            description: 'Bulk enable selected hosts',
+            inputSchema: z.object({ uuids: z.array(z.string()).describe('Array of host UUIDs') }),
+        },
         async (params) => {
             try { return toolResult(await client.bulkEnableHosts(params)); } catch (e) { return toolError(e); }
         },
     );
 
-    server.tool(
+    server.registerTool(
         'hosts_bulk_disable',
-        'Bulk disable selected hosts',
-        { uuids: z.array(z.string()).describe('Array of host UUIDs') },
+        {
+            description: 'Bulk disable selected hosts',
+            inputSchema: z.object({ uuids: z.array(z.string()).describe('Array of host UUIDs') }),
+        },
         async (params) => {
             try { return toolResult(await client.bulkDisableHosts(params)); } catch (e) { return toolError(e); }
         },
     );
 
-    server.tool(
+    server.registerTool(
         'hosts_bulk_delete',
-        'Bulk delete selected hosts',
-        { uuids: z.array(z.string()).describe('Array of host UUIDs') },
+        {
+            description: 'Bulk delete selected hosts',
+            inputSchema: z.object({ uuids: z.array(z.string()).describe('Array of host UUIDs') }),
+        },
         async (params) => {
             try { return toolResult(await client.bulkDeleteHosts(params)); } catch (e) { return toolError(e); }
         },
     );
 
-    server.tool(
+    server.registerTool(
         'hosts_bulk_set_inbound',
-        'Bulk set inbound for selected hosts',
         {
-            uuids: z.array(z.string()).describe('Array of host UUIDs'),
-            configProfileUuid: z.string().describe('Config profile UUID'),
-            configProfileInboundUuid: z.string().describe('Inbound UUID'),
+            description: 'Bulk set inbound for selected hosts',
+            inputSchema: z.object({
+                uuids: z.array(z.string()).describe('Array of host UUIDs'),
+                configProfileUuid: z.string().describe('Config profile UUID'),
+                configProfileInboundUuid: z.string().describe('Inbound UUID'),
+            }),
         },
         async (params) => {
             try { return toolResult(await client.bulkSetHostInbound(params)); } catch (e) { return toolError(e); }
         },
     );
 
-    server.tool(
+    server.registerTool(
         'hosts_bulk_set_port',
-        'Bulk set port for selected hosts',
         {
-            uuids: z.array(z.string()).describe('Array of host UUIDs'),
-            port: z.number().describe('New port number'),
+            description: 'Bulk set port for selected hosts',
+            inputSchema: z.object({
+                uuids: z.array(z.string()).describe('Array of host UUIDs'),
+                port: z.number().describe('New port number'),
+            }),
         },
         async (params) => {
             try { return toolResult(await client.bulkSetHostPort(params)); } catch (e) { return toolError(e); }

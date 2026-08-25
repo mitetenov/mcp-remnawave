@@ -1,4 +1,4 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { RemnawaveClient } from '../client/index.js';
 import { registerUserTools } from './users.js';
 import { registerNodeTools } from './nodes.js';

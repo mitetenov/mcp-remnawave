@@ -1,5 +1,5 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
+import { McpServer } from '@modelcontextprotocol/server';
+import * as z from 'zod/v4';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
@@ -7,11 +7,13 @@ export function registerHwidTools(
     server: McpServer,
     client: RemnawaveClient,
 ) {
-    server.tool(
+    server.registerTool(
         'hwid_devices_list',
-        'List HWID devices for a specific user',
         {
-            userId: z.number().describe('User ID'),
+            description: 'List HWID devices for a specific user',
+            inputSchema: z.object({
+                userId: z.number().describe('User ID'),
+            }),
         },
         async ({ userId }) => {
             try {
@@ -23,10 +25,12 @@ export function registerHwidTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'hwid_devices_list_all',
-        'List all HWID devices across all users',
-        {},
+        {
+            description: 'List all HWID devices across all users',
+            inputSchema: z.object({}),
+        },
         async () => {
             try {
                 const result = await client.getAllHwidDevices();
@@ -37,10 +41,12 @@ export function registerHwidTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'hwid_stats',
-        'Get HWID device statistics',
-        {},
+        {
+            description: 'Get HWID device statistics',
+            inputSchema: z.object({}),
+        },
         async () => {
             try {
                 const result = await client.getHwidStats();
@@ -51,10 +57,12 @@ export function registerHwidTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'hwid_top_users',
-        'Get users with most HWID devices',
-        {},
+        {
+            description: 'Get users with most HWID devices',
+            inputSchema: z.object({}),
+        },
         async () => {
             try {
                 const result = await client.getHwidTopUsers();
@@ -65,16 +73,18 @@ export function registerHwidTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'hwid_device_create',
-        'Create a HWID device entry for a user',
         {
-            userId: z.number().describe('User ID'),
-            hwid: z.string().describe('Hardware ID (10-64 chars, letters/digits/=/-)'),
-            platform: z.string().optional().describe('Device platform'),
-            osVersion: z.string().optional().describe('OS version'),
-            deviceModel: z.string().optional().describe('Device model'),
-            userAgent: z.string().optional().describe('User agent string'),
+            description: 'Create a HWID device entry for a user',
+            inputSchema: z.object({
+                userId: z.number().describe('User ID'),
+                hwid: z.string().describe('Hardware ID (10-64 chars, letters/digits/=/-)'),
+                platform: z.string().optional().describe('Device platform'),
+                osVersion: z.string().optional().describe('OS version'),
+                deviceModel: z.string().optional().describe('Device model'),
+                userAgent: z.string().optional().describe('User agent string'),
+            }),
         },
         async (params) => {
             try {
@@ -86,12 +96,14 @@ export function registerHwidTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'hwid_device_delete',
-        'Delete a specific HWID device',
         {
-            userId: z.number().describe('User ID'),
-            hwid: z.string().describe('HWID of the device to delete'),
+            description: 'Delete a specific HWID device',
+            inputSchema: z.object({
+                userId: z.number().describe('User ID'),
+                hwid: z.string().describe('HWID of the device to delete'),
+            }),
         },
         async ({ userId, hwid }) => {
             try {
@@ -103,11 +115,13 @@ export function registerHwidTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'hwid_devices_delete_all',
-        'Delete all HWID devices for a user',
         {
-            userId: z.number().describe('User ID'),
+            description: 'Delete all HWID devices for a user',
+            inputSchema: z.object({
+                userId: z.number().describe('User ID'),
+            }),
         },
         async ({ userId }) => {
             try {

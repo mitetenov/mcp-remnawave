@@ -1,7 +1,8 @@
 import http, { type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterEach, describe, expect, it } from 'vitest';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer } from '@modelcontextprotocol/server';
+import * as z from 'zod/v4';
 import { createHttpHandler } from '../src/http-handler.js';
 import { HttpSessionManager } from '../src/http-session-manager.js';
 
@@ -17,7 +18,7 @@ const running: Running[] = [];
 
 function testMcpServer(): McpServer {
     const server = new McpServer({ name: 'session-test', version: '1.0.0' });
-    server.tool('ping', 'Test tool', {}, async () => ({
+    server.registerTool('ping', { description: 'Test tool', inputSchema: z.object({}) }, async () => ({
         content: [{ type: 'text', text: 'pong' }],
     }));
     return server;
