@@ -14,7 +14,7 @@ MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing
 
 ### Features
 
-- **179 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, node integrations, shared lists, connections, bandwidth stats, and metadata
+- **180 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, node integrations, shared lists, connections, bandwidth stats, and metadata
 - **4 resources** — real-time panel stats, node status, health checks, user details
 - **5 prompts** — guided workflows for common tasks
 - **Support mode (default)** — restrict to 16 user-facing tools with credentials stripped, for support bots
@@ -85,7 +85,7 @@ The only mutating operation is removing HWID devices, which is safe: a device
 re-registers on the next connect. Intended for support bots that act on behalf
 of an end user.
 
-**Full mode** has no restrictions: all 179 tools, 4 resources, 5 prompts, and
+**Full mode** has no restrictions: all 180 tools, 4 resources, 5 prompts, and
 untouched responses. Enable it with `REMNAWAVE_IS_SUPPORT=false`.
 
 The flag is parsed fail-closed — only the exact string `false` unlocks full
@@ -95,7 +95,7 @@ Tools available in support mode:
 
 | Category | Tools |
 |----------|-------|
-| User lookup (5) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id` |
+| User lookup (6) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_subscription_url_by_telegram_id` |
 | Subscription (4) | `subscriptions_get_by_user_id`, `subscriptions_get_by_username`, `subscriptions_get_by_short_uuid`, `subscription_info` |
 | Access and usage (2) | `users_accessible_nodes`, `bandwidth_user_usage` |
 | Devices (3) | `hwid_devices_list`, `hwid_device_delete`, `hwid_devices_delete_all` |
@@ -196,6 +196,7 @@ Users are addressed by their numeric `userId` — the panel dropped user UUIDs i
 | `users_get_by_username` | Get user by username | read |
 | `users_get_by_short_uuid` | Get user by short UUID | read |
 | `users_get_by_telegram_id` | Get users by Telegram ID (returns a list) | read |
+| `users_get_subscription_url_by_telegram_id` | Get the only unambiguous subscription URL for a Telegram user; return no URL for distinct matches | read |
 | `users_accessible_nodes` | List nodes the user can connect to | read |
 | `users_tags_list` | List all user tags | read |
 | `users_resolve` | Resolve a user by ID, short UUID or username | read |
@@ -557,7 +558,7 @@ MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), п
 
 ### Возможности
 
-- **179 инструментов** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, интеграциями нод, общими списками, соединениями, статистикой трафика и метаданными
+- **180 инструментов** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, интеграциями нод, общими списками, соединениями, статистикой трафика и метаданными
 - **4 ресурса** — статистика панели, статус нод, проверка здоровья, данные пользователя в реальном времени
 - **5 промптов** — пошаговые сценарии для типичных задач
 - **Режим support (по умолчанию)** — 16 пользовательских инструментов с вырезанными кредами, для саппорт-ботов
@@ -628,7 +629,7 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 устройство снова появится при следующем подключении. Режим рассчитан на
 саппорт-ботов, действующих от имени пользователя.
 
-**Full — без ограничений:** все 179 инструментов, 4 ресурса, 5 промптов,
+**Full — без ограничений:** все 180 инструментов, 4 ресурса, 5 промптов,
 ответы не трогаются. Включается через `REMNAWAVE_IS_SUPPORT=false`.
 
 Флаг разбирается fail-closed: полный режим включает только точная строка
@@ -639,7 +640,7 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 
 | Категория | Инструменты |
 |-----------|-------------|
-| Поиск пользователя (5) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id` |
+| Поиск пользователя (6) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_subscription_url_by_telegram_id` |
 | Подписка (4) | `subscriptions_get_by_user_id`, `subscriptions_get_by_username`, `subscriptions_get_by_short_uuid`, `subscription_info` |
 | Доступ и расход (2) | `users_accessible_nodes`, `bandwidth_user_usage` |
 | Устройства (3) | `hwid_devices_list`, `hwid_device_delete`, `hwid_devices_delete_all` |
@@ -741,6 +742,7 @@ supportBot до поддержки современной эры он всё е�
 | `users_get_by_username` | Получить пользователя по username | read |
 | `users_get_by_short_uuid` | Получить пользователя по short UUID | read |
 | `users_get_by_telegram_id` | Получить пользователей по Telegram ID (список) | read |
+| `users_get_subscription_url_by_telegram_id` | Получить единственный однозначный URL подписки по Telegram ID; при нескольких разных совпадениях URL не возвращается | read |
 | `users_accessible_nodes` | Ноды, доступные пользователю | read |
 | `users_tags_list` | Список тегов пользователей | read |
 | `users_resolve` | Найти пользователя по ID, short UUID или username | read |

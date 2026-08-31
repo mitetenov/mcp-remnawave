@@ -16,6 +16,9 @@ export const SUPPORT_TOOLS: ReadonlySet<string> = new Set([
     // The support bot's entry point: it knows the sender's Telegram ID and
     // nothing else, and panel 3.x dropped `GET /api/users/by-telegram-id`.
     'users_get_by_telegram_id',
+    // Projects this caller to one unambiguous subscription URL only. If the
+    // Telegram ID matches distinct accounts, no URL enters the model context.
+    'users_get_subscription_url_by_telegram_id',
     'users_accessible_nodes',
     'subscriptions_get_by_user_id',
     'subscriptions_get_by_username',

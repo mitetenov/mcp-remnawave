@@ -4,6 +4,47 @@ import type { CreateUserCommand, UpdateUserCommand } from '@remnawave/backend-co
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
+type UserRecord = Record<string, unknown>;
+
+function isRecord(value: unknown): value is UserRecord {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+/**
+ * Reduce the panel's Telegram-user lookup response to the only data needed to
+ * connect another device. Keeping this projection here prevents credentials or
+ * unrelated account fields from entering the support-model context.
+ */
+export function subscriptionUrlFromTelegramLookup(payload: unknown) {
+    const root = isRecord(payload) ? payload : {};
+    const response = isRecord(root.response) ? root.response : root;
+    const users = Array.isArray(response.users) ? response.users : [];
+    const subscriptionUrls = [
+        ...new Set(users.flatMap((candidate) => {
+            if (!isRecord(candidate)) {
+                return [];
+            }
+            const subscriptionUrl = candidate.subscriptionUrl;
+            if (typeof subscriptionUrl !== 'string' || !subscriptionUrl.trim()) {
+                return [];
+            }
+            return [subscriptionUrl];
+        })),
+    ];
+
+    if (subscriptionUrls.length === 1) {
+        return { status: 'found', subscriptionUrl: subscriptionUrls[0] };
+    }
+    if (subscriptionUrls.length > 1) {
+        return {
+            status: 'ambiguous',
+            subscriptionUrl: null,
+            matchCount: subscriptionUrls.length,
+        };
+    }
+    return { status: 'not_found', subscriptionUrl: null };
+}
+
 export function registerUserTools(server: McpServer, client: RemnawaveClient) {
     server.registerTool(
         'users_list',
@@ -91,6 +132,24 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
             try {
                 const result = await client.getUsersByTelegramId(telegramId, size);
                 return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.registerTool(
+        'users_get_subscription_url_by_telegram_id',
+        {
+            description: 'Get the only unambiguous VPN subscription URL for the authenticated Telegram user. Returns no URL if several distinct accounts match.',
+            inputSchema: z.object({
+                telegramId: z.number().describe('Authenticated Telegram user ID'),
+            }),
+        },
+        async ({ telegramId }) => {
+            try {
+                const result = await client.getUsersByTelegramId(telegramId);
+                return toolResult(subscriptionUrlFromTelegramLookup(result));
             } catch (e) {
                 return toolError(e);
             }

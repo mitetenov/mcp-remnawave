@@ -31,17 +31,17 @@ type ResourceCall = [string, unknown, { mimeType?: string; description?: string 
 type PromptCall = [string, { argsSchema?: z.ZodObject; description?: string }, (args: Record<string, unknown>) => Promise<{ messages: Array<{ content: { text: string } }> }>];
 
 describe('tool registrations (v2 API shape)', () => {
-    it('registers exactly 179 tools, each with a root z.object inputSchema and a description', () => {
+    it('registers exactly 180 tools, each with a root z.object inputSchema and a description', () => {
         const server = new McpServer({ name: 'shape-test', version: '1.0.0' });
         const spy = vi.spyOn(server, 'registerTool');
 
         registerAllTools(server, fakeClient());
 
-        expect(spy).toHaveBeenCalledTimes(179);
+        expect(spy).toHaveBeenCalledTimes(180);
 
         const calls = spy.mock.calls as unknown as ToolCall[];
         const names = calls.map((call) => call[0]);
-        expect(new Set(names).size).toBe(179);
+        expect(new Set(names).size).toBe(180);
 
         for (const [name, config] of calls) {
             expect(config.inputSchema, `missing inputSchema for ${name}`).toBeInstanceOf(z.ZodObject);
