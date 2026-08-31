@@ -1,5 +1,5 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
+import { McpServer } from '@modelcontextprotocol/server';
+import * as z from 'zod/v4';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
@@ -7,10 +7,12 @@ export function registerSquadTools(
     server: McpServer,
     client: RemnawaveClient,
 ) {
-    server.tool(
+    server.registerTool(
         'squads_list',
-        'List all internal squads',
-        {},
+        {
+            description: 'List all internal squads',
+            inputSchema: z.object({}),
+        },
         async () => {
             try {
                 const result = await client.getInternalSquads();
@@ -21,11 +23,13 @@ export function registerSquadTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'squads_accessible_nodes',
-        'Get nodes accessible to a specific squad',
         {
-            uuid: z.string().describe('Squad UUID'),
+            description: 'Get nodes accessible to a specific squad',
+            inputSchema: z.object({
+                uuid: z.string().describe('Squad UUID'),
+            }),
         },
         async ({ uuid }) => {
             try {
@@ -37,12 +41,14 @@ export function registerSquadTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'squads_create',
-        'Create a new internal squad',
         {
-            name: z.string().describe('Squad name'),
-            inbounds: z.array(z.string()).describe('Array of inbound UUIDs'),
+            description: 'Create a new internal squad',
+            inputSchema: z.object({
+                name: z.string().describe('Squad name'),
+                inbounds: z.array(z.string()).describe('Array of inbound UUIDs'),
+            }),
         },
         async (params) => {
             try {
@@ -54,12 +60,14 @@ export function registerSquadTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'squads_update',
-        'Update an internal squad',
         {
-            uuid: z.string().describe('Squad UUID'),
-            name: z.string().optional().describe('New squad name'),
+            description: 'Update an internal squad',
+            inputSchema: z.object({
+                uuid: z.string().describe('Squad UUID'),
+                name: z.string().optional().describe('New squad name'),
+            }),
         },
         async (params) => {
             try {
@@ -71,11 +79,13 @@ export function registerSquadTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'squads_delete',
-        'Delete an internal squad',
         {
-            uuid: z.string().describe('Squad UUID to delete'),
+            description: 'Delete an internal squad',
+            inputSchema: z.object({
+                uuid: z.string().describe('Squad UUID to delete'),
+            }),
         },
         async ({ uuid }) => {
             try {
@@ -90,14 +100,16 @@ export function registerSquadTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'squads_add_users',
-        'Add specific users to an internal squad',
         {
-            squadUuid: z.string().describe('Squad UUID'),
-            userIds: z
-                .array(z.number())
-                .describe('Array of user IDs to add (max 1000)'),
+            description: 'Add specific users to an internal squad',
+            inputSchema: z.object({
+                squadUuid: z.string().describe('Squad UUID'),
+                userIds: z
+                    .array(z.number())
+                    .describe('Array of user IDs to add (max 1000)'),
+            }),
         },
         async ({ squadUuid, userIds }) => {
             try {
@@ -111,14 +123,16 @@ export function registerSquadTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'squads_remove_users',
-        'Remove specific users from an internal squad',
         {
-            squadUuid: z.string().describe('Squad UUID'),
-            userIds: z
-                .array(z.number())
-                .describe('Array of user IDs to remove (max 1000)'),
+            description: 'Remove specific users from an internal squad',
+            inputSchema: z.object({
+                squadUuid: z.string().describe('Squad UUID'),
+                userIds: z
+                    .array(z.number())
+                    .describe('Array of user IDs to remove (max 1000)'),
+            }),
         },
         async ({ squadUuid, userIds }) => {
             try {
@@ -132,11 +146,13 @@ export function registerSquadTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'squads_add_all_users',
-        'Add EVERY user on the panel to an internal squad',
         {
-            squadUuid: z.string().describe('Squad UUID'),
+            description: 'Add EVERY user on the panel to an internal squad',
+            inputSchema: z.object({
+                squadUuid: z.string().describe('Squad UUID'),
+            }),
         },
         async ({ squadUuid }) => {
             try {
@@ -148,11 +164,13 @@ export function registerSquadTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'squads_remove_all_users',
-        'Remove EVERY user from an internal squad',
         {
-            squadUuid: z.string().describe('Squad UUID'),
+            description: 'Remove EVERY user from an internal squad',
+            inputSchema: z.object({
+                squadUuid: z.string().describe('Squad UUID'),
+            }),
         },
         async ({ squadUuid }) => {
             try {

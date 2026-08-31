@@ -1,5 +1,5 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
+import { McpServer } from '@modelcontextprotocol/server';
+import * as z from 'zod/v4';
 import type { CreateUserCommand, UpdateUserCommand } from '@remnawave/backend-contract';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
@@ -46,12 +46,14 @@ export function subscriptionUrlFromTelegramLookup(payload: unknown) {
 }
 
 export function registerUserTools(server: McpServer, client: RemnawaveClient) {
-    server.tool(
+    server.registerTool(
         'users_list',
-        'List all Remnawave VPN users with pagination',
         {
-            start: z.number().default(0).describe('Offset for pagination'),
-            size: z.number().default(25).describe('Number of users to return'),
+            description: 'List all Remnawave VPN users with pagination',
+            inputSchema: z.object({
+                start: z.number().default(0).describe('Offset for pagination'),
+                size: z.number().default(25).describe('Number of users to return'),
+            }),
         },
         async ({ start, size }) => {
             try {
@@ -63,11 +65,13 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_get',
-        'Get a specific Remnawave user by their numeric ID',
         {
-            userId: z.number().describe('User ID'),
+            description: 'Get a specific Remnawave user by their numeric ID',
+            inputSchema: z.object({
+                userId: z.number().describe('User ID'),
+            }),
         },
         async ({ userId }) => {
             try {
@@ -79,11 +83,13 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_get_by_username',
-        'Get a Remnawave user by their username',
         {
-            username: z.string().describe('Username'),
+            description: 'Get a Remnawave user by their username',
+            inputSchema: z.object({
+                username: z.string().describe('Username'),
+            }),
         },
         async ({ username }) => {
             try {
@@ -95,11 +101,13 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_get_by_short_uuid',
-        'Get a Remnawave user by their short UUID',
         {
-            shortUuid: z.string().describe('Short UUID'),
+            description: 'Get a Remnawave user by their short UUID',
+            inputSchema: z.object({
+                shortUuid: z.string().describe('Short UUID'),
+            }),
         },
         async ({ shortUuid }) => {
             try {
@@ -111,12 +119,14 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_get_by_telegram_id',
-        'Get Remnawave users by their Telegram ID. Returns a list — one Telegram ID may own several accounts.',
         {
-            telegramId: z.number().describe('Telegram user ID'),
-            size: z.number().optional().describe('Max users to return (default 25)'),
+            description: 'Get Remnawave users by their Telegram ID. Returns a list — one Telegram ID may own several accounts.',
+            inputSchema: z.object({
+                telegramId: z.number().describe('Telegram user ID'),
+                size: z.number().optional().describe('Max users to return (default 25)'),
+            }),
         },
         async ({ telegramId, size }) => {
             try {
@@ -128,11 +138,13 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_get_subscription_url_by_telegram_id',
-        'Get the only unambiguous VPN subscription URL for the authenticated Telegram user. Returns no URL if several distinct accounts match.',
         {
-            telegramId: z.number().describe('Authenticated Telegram user ID'),
+            description: 'Get the only unambiguous VPN subscription URL for the authenticated Telegram user. Returns no URL if several distinct accounts match.',
+            inputSchema: z.object({
+                telegramId: z.number().describe('Authenticated Telegram user ID'),
+            }),
         },
         async ({ telegramId }) => {
             try {
@@ -144,11 +156,13 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_accessible_nodes',
-        'List nodes a Remnawave user can connect to',
         {
-            userId: z.number().describe('User ID'),
+            description: 'List nodes a Remnawave user can connect to',
+            inputSchema: z.object({
+                userId: z.number().describe('User ID'),
+            }),
         },
         async ({ userId }) => {
             try {
@@ -160,10 +174,12 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_tags_list',
-        'List all user tags',
-        {},
+        {
+            description: 'List all user tags',
+            inputSchema: z.object({}),
+        },
         async () => {
             try {
                 const result = await client.getUserTags();
@@ -174,13 +190,15 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_resolve',
-        'Search and resolve a user by ID, short UUID, or username. Exactly one of the fields must be provided.',
         {
-            id: z.number().optional().describe('User numeric ID'),
-            shortUuid: z.string().optional().describe('Short UUID'),
-            username: z.string().optional().describe('Username'),
+            description: 'Search and resolve a user by ID, short UUID, or username. Exactly one of the fields must be provided.',
+            inputSchema: z.object({
+                id: z.number().optional().describe('User numeric ID'),
+                shortUuid: z.string().optional().describe('Short UUID'),
+                username: z.string().optional().describe('Username'),
+            }),
         },
         async (params) => {
             try {
@@ -192,38 +210,40 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_create',
-        'Create a new VPN user in Remnawave',
         {
-            username: z.string().describe('Unique username'),
-            expireAt: z.string().describe('Expiration date in ISO 8601 format'),
-            trafficLimitBytes: z
-                .number()
-                .optional()
-                .describe('Traffic limit in bytes (0 = unlimited)'),
-            trafficLimitStrategy: z
-                .enum(['NO_RESET', 'DAY', 'WEEK', 'MONTH', 'MONTH_ROLLING'])
-                .optional()
-                .describe('Traffic reset period'),
-            status: z
-                .enum(['ACTIVE', 'DISABLED'])
-                .optional()
-                .describe('Initial user status'),
-            description: z.string().optional().describe('User description'),
-            tag: z.string().optional().describe('User tag for grouping'),
-            telegramId: z.number().optional().describe('Telegram user ID'),
-            email: z.string().optional().describe('User email'),
-            hwidDeviceLimit: z
-                .number()
-                .optional()
-                .describe('Max number of HWID devices'),
-            activeInternalSquads: z
-                .array(z.string())
-                .optional()
-                .describe('Array of internal squad UUIDs'),
-            shortUuid: z.string().optional().describe('Custom short UUID for the user'),
-            externalSquadUuid: z.string().optional().describe('External squad UUID'),
+            description: 'Create a new VPN user in Remnawave',
+            inputSchema: z.object({
+                username: z.string().describe('Unique username'),
+                expireAt: z.string().describe('Expiration date in ISO 8601 format'),
+                trafficLimitBytes: z
+                    .number()
+                    .optional()
+                    .describe('Traffic limit in bytes (0 = unlimited)'),
+                trafficLimitStrategy: z
+                    .enum(['NO_RESET', 'DAY', 'WEEK', 'MONTH', 'MONTH_ROLLING'])
+                    .optional()
+                    .describe('Traffic reset period'),
+                status: z
+                    .enum(['ACTIVE', 'DISABLED'])
+                    .optional()
+                    .describe('Initial user status'),
+                description: z.string().optional().describe('User description'),
+                tag: z.string().optional().describe('User tag for grouping'),
+                telegramId: z.number().optional().describe('Telegram user ID'),
+                email: z.string().optional().describe('User email'),
+                hwidDeviceLimit: z
+                    .number()
+                    .optional()
+                    .describe('Max number of HWID devices'),
+                activeInternalSquads: z
+                    .array(z.string())
+                    .optional()
+                    .describe('Array of internal squad UUIDs'),
+                shortUuid: z.string().optional().describe('Custom short UUID for the user'),
+                externalSquadUuid: z.string().optional().describe('External squad UUID'),
+            }),
         },
         async (params) => {
             try {
@@ -238,44 +258,46 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_update',
-        'Update an existing Remnawave user. Identify the user by id or username.',
         {
-            id: z.number().optional().describe('User ID to update'),
-            username: z
-                .string()
-                .optional()
-                .describe('Username of the user to update (alternative to id)'),
-            expireAt: z
-                .string()
-                .optional()
-                .describe('New expiration date (ISO 8601)'),
-            trafficLimitBytes: z
-                .number()
-                .optional()
-                .describe('New traffic limit in bytes'),
-            trafficLimitStrategy: z
-                .enum(['NO_RESET', 'DAY', 'WEEK', 'MONTH', 'MONTH_ROLLING'])
-                .optional()
-                .describe('Traffic reset period'),
-            status: z
-                .enum(['ACTIVE', 'DISABLED'])
-                .optional()
-                .describe('User status'),
-            description: z.string().optional().describe('User description'),
-            tag: z.string().optional().describe('User tag'),
-            telegramId: z.number().optional().describe('Telegram user ID'),
-            email: z.string().optional().describe('User email'),
-            hwidDeviceLimit: z
-                .number()
-                .optional()
-                .describe('Max HWID devices'),
-            activeInternalSquads: z
-                .array(z.string())
-                .optional()
-                .describe('Internal squad UUIDs'),
-            externalSquadUuid: z.string().optional().describe('External squad UUID'),
+            description: 'Update an existing Remnawave user. Identify the user by id or username.',
+            inputSchema: z.object({
+                id: z.number().optional().describe('User ID to update'),
+                username: z
+                    .string()
+                    .optional()
+                    .describe('Username of the user to update (alternative to id)'),
+                expireAt: z
+                    .string()
+                    .optional()
+                    .describe('New expiration date (ISO 8601)'),
+                trafficLimitBytes: z
+                    .number()
+                    .optional()
+                    .describe('New traffic limit in bytes'),
+                trafficLimitStrategy: z
+                    .enum(['NO_RESET', 'DAY', 'WEEK', 'MONTH', 'MONTH_ROLLING'])
+                    .optional()
+                    .describe('Traffic reset period'),
+                status: z
+                    .enum(['ACTIVE', 'DISABLED'])
+                    .optional()
+                    .describe('User status'),
+                description: z.string().optional().describe('User description'),
+                tag: z.string().optional().describe('User tag'),
+                telegramId: z.number().optional().describe('Telegram user ID'),
+                email: z.string().optional().describe('User email'),
+                hwidDeviceLimit: z
+                    .number()
+                    .optional()
+                    .describe('Max HWID devices'),
+                activeInternalSquads: z
+                    .array(z.string())
+                    .optional()
+                    .describe('Internal squad UUIDs'),
+                externalSquadUuid: z.string().optional().describe('External squad UUID'),
+            }),
         },
         async (params) => {
             try {
@@ -290,11 +312,13 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_delete',
-        'Permanently delete a Remnawave user',
         {
-            userId: z.number().describe('User ID to delete'),
+            description: 'Permanently delete a Remnawave user',
+            inputSchema: z.object({
+                userId: z.number().describe('User ID to delete'),
+            }),
         },
         async ({ userId }) => {
             try {
@@ -306,11 +330,13 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_enable',
-        'Enable a disabled Remnawave user (restore VPN access)',
         {
-            userId: z.number().describe('User ID'),
+            description: 'Enable a disabled Remnawave user (restore VPN access)',
+            inputSchema: z.object({
+                userId: z.number().describe('User ID'),
+            }),
         },
         async ({ userId }) => {
             try {
@@ -322,11 +348,13 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_disable',
-        'Disable a Remnawave user (block VPN access)',
         {
-            userId: z.number().describe('User ID'),
+            description: 'Disable a Remnawave user (block VPN access)',
+            inputSchema: z.object({
+                userId: z.number().describe('User ID'),
+            }),
         },
         async ({ userId }) => {
             try {
@@ -338,11 +366,13 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_revoke_subscription',
-        'Revoke subscription for a Remnawave user (generates new subscription link)',
         {
-            userId: z.number().describe('User ID'),
+            description: 'Revoke subscription for a Remnawave user (generates new subscription link)',
+            inputSchema: z.object({
+                userId: z.number().describe('User ID'),
+            }),
         },
         async ({ userId }) => {
             try {
@@ -354,11 +384,13 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_reset_traffic',
-        'Reset traffic counter for a Remnawave user',
         {
-            userId: z.number().describe('User ID'),
+            description: 'Reset traffic counter for a Remnawave user',
+            inputSchema: z.object({
+                userId: z.number().describe('User ID'),
+            }),
         },
         async ({ userId }) => {
             try {
@@ -370,12 +402,14 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_extend_expiration',
-        'Extend expiration date for a single Remnawave user. An EXPIRED user is extended from today and becomes ACTIVE.',
         {
-            userId: z.number().describe('User ID'),
-            days: z.number().describe('Number of days to extend'),
+            description: 'Extend expiration date for a single Remnawave user. An EXPIRED user is extended from today and becomes ACTIVE.',
+            inputSchema: z.object({
+                userId: z.number().describe('User ID'),
+                days: z.number().describe('Number of days to extend'),
+            }),
         },
         async ({ userId, days }) => {
             try {
@@ -387,11 +421,13 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_bulk_delete_by_status',
-        'Bulk delete users by status',
         {
-            status: z.enum(['ACTIVE', 'DISABLED', 'LIMITED', 'EXPIRED']).describe('User status to delete'),
+            description: 'Bulk delete users by status',
+            inputSchema: z.object({
+                status: z.enum(['ACTIVE', 'DISABLED', 'LIMITED', 'EXPIRED']).describe('User status to delete'),
+            }),
         },
         async (params) => {
             try {
@@ -403,21 +439,23 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_bulk_update',
-        'Bulk update selected users',
         {
-            userIds: z.array(z.number()).describe('Array of user IDs to update'),
-            status: z.enum(['ACTIVE', 'DISABLED', 'LIMITED', 'EXPIRED']).optional().describe('New status'),
-            expireAt: z.string().optional().describe('New expiration date (ISO 8601)'),
-            trafficLimitBytes: z.number().optional().describe('New traffic limit'),
-            trafficLimitStrategy: z.enum(['NO_RESET', 'DAY', 'WEEK', 'MONTH', 'MONTH_ROLLING']).optional().describe('Traffic reset period'),
-            description: z.string().optional().describe('User description'),
-            telegramId: z.number().optional().describe('Telegram user ID'),
-            email: z.string().optional().describe('User email'),
-            tag: z.string().optional().describe('User tag'),
-            hwidDeviceLimit: z.number().optional().describe('Max HWID devices'),
-            externalSquadUuid: z.string().optional().describe('External squad UUID'),
+            description: 'Bulk update selected users',
+            inputSchema: z.object({
+                userIds: z.array(z.number()).describe('Array of user IDs to update'),
+                status: z.enum(['ACTIVE', 'DISABLED', 'LIMITED', 'EXPIRED']).optional().describe('New status'),
+                expireAt: z.string().optional().describe('New expiration date (ISO 8601)'),
+                trafficLimitBytes: z.number().optional().describe('New traffic limit'),
+                trafficLimitStrategy: z.enum(['NO_RESET', 'DAY', 'WEEK', 'MONTH', 'MONTH_ROLLING']).optional().describe('Traffic reset period'),
+                description: z.string().optional().describe('User description'),
+                telegramId: z.number().optional().describe('Telegram user ID'),
+                email: z.string().optional().describe('User email'),
+                tag: z.string().optional().describe('User tag'),
+                hwidDeviceLimit: z.number().optional().describe('Max HWID devices'),
+                externalSquadUuid: z.string().optional().describe('External squad UUID'),
+            }),
         },
         async (params) => {
             try {
@@ -436,11 +474,13 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_bulk_reset_traffic',
-        'Bulk reset traffic for selected users',
         {
-            userIds: z.array(z.number()).describe('Array of user IDs'),
+            description: 'Bulk reset traffic for selected users',
+            inputSchema: z.object({
+                userIds: z.array(z.number()).describe('Array of user IDs'),
+            }),
         },
         async (params) => {
             try {
@@ -452,11 +492,13 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_bulk_revoke_subscription',
-        'Bulk revoke subscriptions for selected users',
         {
-            userIds: z.array(z.number()).describe('Array of user IDs'),
+            description: 'Bulk revoke subscriptions for selected users',
+            inputSchema: z.object({
+                userIds: z.array(z.number()).describe('Array of user IDs'),
+            }),
         },
         async (params) => {
             try {
@@ -468,11 +510,13 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_bulk_delete',
-        'Bulk delete selected users',
         {
-            userIds: z.array(z.number()).describe('Array of user IDs to delete'),
+            description: 'Bulk delete selected users',
+            inputSchema: z.object({
+                userIds: z.array(z.number()).describe('Array of user IDs to delete'),
+            }),
         },
         async (params) => {
             try {
@@ -484,12 +528,14 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_bulk_update_squads',
-        'Bulk update squad assignments for selected users',
         {
-            userIds: z.array(z.number()).describe('Array of user IDs'),
-            activeInternalSquads: z.array(z.string()).describe('Squad UUIDs to assign'),
+            description: 'Bulk update squad assignments for selected users',
+            inputSchema: z.object({
+                userIds: z.array(z.number()).describe('Array of user IDs'),
+                activeInternalSquads: z.array(z.string()).describe('Squad UUIDs to assign'),
+            }),
         },
         async (params) => {
             try {
@@ -501,12 +547,14 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_bulk_extend_expiration',
-        'Bulk extend expiration date for selected users',
         {
-            userIds: z.array(z.number()).describe('Array of user IDs'),
-            extendDays: z.number().describe('Number of days to extend'),
+            description: 'Bulk extend expiration date for selected users',
+            inputSchema: z.object({
+                userIds: z.array(z.number()).describe('Array of user IDs'),
+                extendDays: z.number().describe('Number of days to extend'),
+            }),
         },
         async (params) => {
             try {
@@ -518,19 +566,21 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_bulk_all_update',
-        'Update ALL users at once',
         {
-            status: z.enum(['ACTIVE', 'DISABLED', 'LIMITED', 'EXPIRED']).optional().describe('New status for all'),
-            expireAt: z.string().optional().describe('New expiration date for all'),
-            trafficLimitBytes: z.number().optional().describe('Traffic limit in bytes'),
-            trafficLimitStrategy: z.enum(['NO_RESET', 'DAY', 'WEEK', 'MONTH', 'MONTH_ROLLING']).optional().describe('Traffic reset period'),
-            description: z.string().optional().describe('User description'),
-            telegramId: z.number().optional().describe('Telegram user ID'),
-            email: z.string().optional().describe('User email'),
-            tag: z.string().optional().describe('User tag'),
-            hwidDeviceLimit: z.number().optional().describe('Max HWID devices'),
+            description: 'Update ALL users at once',
+            inputSchema: z.object({
+                status: z.enum(['ACTIVE', 'DISABLED', 'LIMITED', 'EXPIRED']).optional().describe('New status for all'),
+                expireAt: z.string().optional().describe('New expiration date for all'),
+                trafficLimitBytes: z.number().optional().describe('Traffic limit in bytes'),
+                trafficLimitStrategy: z.enum(['NO_RESET', 'DAY', 'WEEK', 'MONTH', 'MONTH_ROLLING']).optional().describe('Traffic reset period'),
+                description: z.string().optional().describe('User description'),
+                telegramId: z.number().optional().describe('Telegram user ID'),
+                email: z.string().optional().describe('User email'),
+                tag: z.string().optional().describe('User tag'),
+                hwidDeviceLimit: z.number().optional().describe('Max HWID devices'),
+            }),
         },
         async (params) => {
             try {
@@ -545,10 +595,12 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_bulk_all_reset_traffic',
-        'Reset traffic counters for ALL users',
-        {},
+        {
+            description: 'Reset traffic counters for ALL users',
+            inputSchema: z.object({}),
+        },
         async () => {
             try {
                 const result = await client.bulkAllResetUsersTraffic();
@@ -559,11 +611,13 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient) {
         },
     );
 
-    server.tool(
+    server.registerTool(
         'users_bulk_all_extend_expiration',
-        'Extend expiration date for ALL users',
         {
-            extendDays: z.number().describe('Number of days to extend'),
+            description: 'Extend expiration date for ALL users',
+            inputSchema: z.object({
+                extendDays: z.number().describe('Number of days to extend'),
+            }),
         },
         async (params) => {
             try {

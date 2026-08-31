@@ -1,4 +1,4 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer } from '@modelcontextprotocol/server';
 import { RemnawaveClient } from './client/index.js';
 import { Config } from './config.js';
 import { registerAllTools } from './tools/index.js';
@@ -9,7 +9,7 @@ import { restrictToSupport } from './support-filter.js';
 export function createServer(config: Config): McpServer {
     const server = new McpServer({
         name: 'remnawave-mcp',
-        version: '3.2.1',
+        version: '3.3.0',
     });
 
     const client = new RemnawaveClient(config);

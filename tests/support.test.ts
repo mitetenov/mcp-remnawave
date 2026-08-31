@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { RemnawaveClient } from '../src/client/index.js';
 import { registerAllTools } from '../src/tools/index.js';
 import { registerAllResources } from '../src/resources/index.js';
@@ -16,9 +16,9 @@ function collect(isSupport: boolean) {
     const resources: string[] = [];
     const prompts: string[] = [];
     const mock = {
-        tool: (name: string) => { tools.push(name); return mock; },
-        resource: (name: string) => { resources.push(name); return mock; },
-        prompt: (name: string) => { prompts.push(name); return mock; },
+        registerTool: (name: string) => { tools.push(name); return mock; },
+        registerResource: (name: string) => { resources.push(name); return mock; },
+        registerPrompt: (name: string) => { prompts.push(name); return mock; },
     } as unknown as McpServer;
 
     const client = new RemnawaveClient({

@@ -10,11 +10,11 @@
 
 MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing LLM clients (Claude Desktop, Cursor, Windsurf, etc.) with tools to manage a [Remnawave](https://github.com/remnawave/) VPN panel.
 
-**Version:** 3.2.1 | **Remnawave panel:** 3.3.x (API contract 3.4.x)
+**Version:** 3.3.0 | **Remnawave panel:** 3.3.x (API contract 3.4.x)
 
 ### Features
 
-- **179 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, node integrations, shared lists, connections, bandwidth stats, and metadata
+- **180 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, node integrations, shared lists, connections, bandwidth stats, and metadata
 - **4 resources** — real-time panel stats, node status, health checks, user details
 - **5 prompts** — guided workflows for common tasks
 - **Support mode (default)** — restrict to 16 user-facing tools with credentials stripped, for support bots
@@ -85,7 +85,7 @@ The only mutating operation is removing HWID devices, which is safe: a device
 re-registers on the next connect. Intended for support bots that act on behalf
 of an end user.
 
-**Full mode** has no restrictions: all 179 tools, 4 resources, 5 prompts, and
+**Full mode** has no restrictions: all 180 tools, 4 resources, 5 prompts, and
 untouched responses. Enable it with `REMNAWAVE_IS_SUPPORT=false`.
 
 The flag is parsed fail-closed — only the exact string `false` unlocks full
@@ -159,10 +159,29 @@ docker compose up -d
 
 Environment variables are passed via `.env` file or `docker-compose.yml`.
 
-The container runs the sessionful Streamable HTTP transport on port 3100.
-`POST /` initializes a new independent session or routes a request by
-`Mcp-Session-Id`; `DELETE /` terminates that session without affecting other
-clients. `GET /health` answers `200 {"status":"ok"}` for container liveness.
+The container serves both MCP protocol eras on the same `/` endpoint on port
+3100, built on TypeScript MCP SDK packages `@modelcontextprotocol/server` and
+`@modelcontextprotocol/node` at `2.0.0`. Clients negotiating the modern
+`2026-07-28` protocol version get fully stateless handling: no
+`Mcp-Session-Id` is ever issued or required, and each request is independent.
+Clients on protocol version `2025-11-25` or earlier keep the sessionful
+Streamable HTTP behavior unchanged: `POST /` initializes a new independent
+session or routes a request by `Mcp-Session-Id`, `GET /` resumes that
+session's SSE stream, and `DELETE /` terminates that session without
+affecting other clients. `GET /health` still answers `200 {"status":"ok"}`
+for container liveness.
+
+### Upgrading to 3.3.0
+
+This release changes only how the HTTP transport is served internally —
+tool behavior, the `/` endpoint, and `/health` are unchanged. Because the
+legacy sessionful era (`2025-11-25` and earlier) is still fully served
+alongside the new stateless `2026-07-28` era, an old supportBot client that
+hasn't been updated keeps working unmodified against a 3.3.0 server during a
+server-first rollout. Conversely, once supportBot is updated to speak the
+modern era, it can still fall back to the legacy era against an older
+server, so rolling this server back to `v3.2.1` remains a safe option if
+needed.
 
 ### Available Tools
 
@@ -535,11 +554,11 @@ MIT
 
 MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), предоставляющий LLM-клиентам (Claude Desktop, Cursor, Windsurf и др.) инструменты для управления VPN-панелью [Remnawave](https://github.com/remnawave/).
 
-**Версия:** 3.2.1 | **Панель Remnawave:** 3.3.x (контракт API 3.4.x)
+**Версия:** 3.3.0 | **Панель Remnawave:** 3.3.x (контракт API 3.4.x)
 
 ### Возможности
 
-- **179 инструментов** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, интеграциями нод, общими списками, соединениями, статистикой трафика и метаданными
+- **180 инструментов** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, интеграциями нод, общими списками, соединениями, статистикой трафика и метаданными
 - **4 ресурса** — статистика панели, статус нод, проверка здоровья, данные пользователя в реальном времени
 - **5 промптов** — пошаговые сценарии для типичных задач
 - **Режим support (по умолчанию)** — 16 пользовательских инструментов с вырезанными кредами, для саппорт-ботов
@@ -610,7 +629,7 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 устройство снова появится при следующем подключении. Режим рассчитан на
 саппорт-ботов, действующих от имени пользователя.
 
-**Full — без ограничений:** все 179 инструментов, 4 ресурса, 5 промптов,
+**Full — без ограничений:** все 180 инструментов, 4 ресурса, 5 промптов,
 ответы не трогаются. Включается через `REMNAWAVE_IS_SUPPORT=false`.
 
 Флаг разбирается fail-closed: полный режим включает только точная строка
@@ -685,11 +704,30 @@ docker compose up -d
 
 Переменные окружения передаются через `.env` файл или `docker-compose.yml`.
 
-В контейнере работает sessionful Streamable HTTP-транспорт на порту 3100.
+Контейнер обслуживает обе эры протокола MCP на одном и том же эндпоинте `/`
+на порту 3100, на базе пакетов TypeScript MCP SDK `@modelcontextprotocol/server`
+и `@modelcontextprotocol/node` версии `2.0.0`. Клиенты, согласующие
+современную версию протокола `2026-07-28`, получают полностью
+stateless-обработку: `Mcp-Session-Id` никогда не выдаётся и не требуется,
+каждый запрос независим. Клиенты на версии протокола `2025-11-25` и старше
+сохраняют прежнее sessionful-поведение Streamable HTTP без изменений:
 `POST /` создаёт независимую сессию или маршрутизирует запрос по
-`Mcp-Session-Id`; `DELETE /` завершает только указанную сессию, не затрагивая
-других клиентов. `GET /health` возвращает `200 {"status":"ok"}` для проверки
+`Mcp-Session-Id`, `GET /` возобновляет SSE-поток этой сессии, а `DELETE /`
+завершает только указанную сессию, не затрагивая других клиентов.
+`GET /health` по-прежнему возвращает `200 {"status":"ok"}` для проверки
 живости контейнера.
+
+### Обновление до 3.3.0
+
+Этот релиз меняет только внутреннюю реализацию HTTP-транспорта — поведение
+инструментов, эндпоинт `/` и `/health` не изменились. Поскольку устаревшая
+sessionful-эра (`2025-11-25` и старше) по-прежнему полностью обслуживается
+наряду с новой stateless-эрой `2026-07-28`, старый клиент supportBot, который
+ещё не обновлён, продолжает работать без изменений с сервером версии 3.3.0
+во время поэтапного (server-first) перехода. И наоборот, после обновления
+supportBot до поддержки современной эры он всё ещё может переключиться на
+устаревшую эру при работе со старым сервером, поэтому откат этого сервера до
+`v3.2.1` остаётся безопасным вариантом при необходимости.
 
 ### Доступные инструменты
 

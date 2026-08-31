@@ -1,5 +1,5 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
+import { McpServer } from '@modelcontextprotocol/server';
+import * as z from 'zod/v4';
 import { RemnawaveClient } from '../client/index.js';
 import { toolResult, toolError } from './helpers.js';
 
@@ -7,12 +7,14 @@ export function registerSubscriptionTools(
     server: McpServer,
     client: RemnawaveClient,
 ) {
-    server.tool(
+    server.registerTool(
         'subscriptions_list',
-        'List all subscriptions with pagination',
         {
-            start: z.number().default(0).describe('Offset for pagination'),
-            size: z.number().default(25).describe('Number of subscriptions'),
+            description: 'List all subscriptions with pagination',
+            inputSchema: z.object({
+                start: z.number().default(0).describe('Offset for pagination'),
+                size: z.number().default(25).describe('Number of subscriptions'),
+            }),
         },
         async ({ start, size }) => {
             try {
@@ -24,11 +26,13 @@ export function registerSubscriptionTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'subscriptions_get_by_user_id',
-        'Get subscription details by user ID',
         {
-            userId: z.number().describe('User ID'),
+            description: 'Get subscription details by user ID',
+            inputSchema: z.object({
+                userId: z.number().describe('User ID'),
+            }),
         },
         async ({ userId }) => {
             try {
@@ -40,11 +44,13 @@ export function registerSubscriptionTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'subscriptions_get_by_username',
-        'Get subscription details by username',
         {
-            username: z.string().describe('Username'),
+            description: 'Get subscription details by username',
+            inputSchema: z.object({
+                username: z.string().describe('Username'),
+            }),
         },
         async ({ username }) => {
             try {
@@ -57,11 +63,13 @@ export function registerSubscriptionTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'subscriptions_get_by_short_uuid',
-        'Get subscription details by short UUID',
         {
-            shortUuid: z.string().describe('Short UUID'),
+            description: 'Get subscription details by short UUID',
+            inputSchema: z.object({
+                shortUuid: z.string().describe('Short UUID'),
+            }),
         },
         async ({ shortUuid }) => {
             try {
@@ -74,11 +82,13 @@ export function registerSubscriptionTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'subscription_info',
-        'Get subscription info by short UUID (public endpoint)',
         {
-            shortUuid: z.string().describe('Short UUID'),
+            description: 'Get subscription info by short UUID (public endpoint)',
+            inputSchema: z.object({
+                shortUuid: z.string().describe('Short UUID'),
+            }),
         },
         async ({ shortUuid }) => {
             try {
@@ -91,46 +101,56 @@ export function registerSubscriptionTools(
         },
     );
 
-    server.tool(
+    server.registerTool(
         'subscriptions_get_raw_by_short_uuid',
-        'Get raw subscription config by short UUID',
-        { shortUuid: z.string().describe('Short UUID') },
+        {
+            description: 'Get raw subscription config by short UUID',
+            inputSchema: z.object({ shortUuid: z.string().describe('Short UUID') }),
+        },
         async ({ shortUuid }) => {
             try { return toolResult(await client.getSubscriptionByShortUuidRaw(shortUuid)); } catch (e) { return toolError(e); }
         },
     );
 
-    server.tool(
+    server.registerTool(
         'subscriptions_get_subpage_config',
-        'Get subscription page configuration',
-        { shortUuid: z.string().describe('Short UUID') },
+        {
+            description: 'Get subscription page configuration',
+            inputSchema: z.object({ shortUuid: z.string().describe('Short UUID') }),
+        },
         async ({ shortUuid }) => {
             try { return toolResult(await client.getSubscriptionSubpageConfig(shortUuid)); } catch (e) { return toolError(e); }
         },
     );
 
-    server.tool(
+    server.registerTool(
         'subscriptions_get_connection_keys',
-        'Get connection keys for a subscription',
-        { userId: z.number().describe('User ID') },
+        {
+            description: 'Get connection keys for a subscription',
+            inputSchema: z.object({ userId: z.number().describe('User ID') }),
+        },
         async ({ userId }) => {
             try { return toolResult(await client.getConnectionKeysByUserId(userId)); } catch (e) { return toolError(e); }
         },
     );
 
-    server.tool(
+    server.registerTool(
         'subscription_request_history_list',
-        'List subscription request history',
-        {},
+        {
+            description: 'List subscription request history',
+            inputSchema: z.object({}),
+        },
         async () => {
             try { return toolResult(await client.getSubscriptionRequestHistory()); } catch (e) { return toolError(e); }
         },
     );
 
-    server.tool(
+    server.registerTool(
         'subscription_request_history_stats',
-        'Get subscription request history statistics',
-        {},
+        {
+            description: 'Get subscription request history statistics',
+            inputSchema: z.object({}),
+        },
         async () => {
             try { return toolResult(await client.getSubscriptionRequestHistoryStats()); } catch (e) { return toolError(e); }
         },
