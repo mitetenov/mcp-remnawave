@@ -93,6 +93,12 @@ mode, so an unset, empty or misspelled value keeps the restricted surface.
 
 Tools available in support mode:
 
+In support mode, `hwid_devices_list` resolves the authenticated Telegram ID
+to all of its panel accounts and returns a current device snapshot grouped by
+`userId`. `hwid_device_delete` accepts the `userId`/`hwid` pair from that
+snapshot, verifies ownership again, and treats a concurrent removal as
+`status: already_absent` instead of an MCP error.
+
 | Category | Tools |
 |----------|-------|
 | User lookup (6) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_subscription_url_by_telegram_id` |
@@ -637,6 +643,12 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 урезанную поверхность.
 
 Инструменты в режиме support:
+
+В support-режиме `hwid_devices_list` сам находит все аккаунты панели текущего
+Telegram ID и возвращает актуальный снимок устройств, сгруппированный по
+`userId`. `hwid_device_delete` принимает пару `userId`/`hwid` из этого снимка,
+повторно проверяет принадлежность аккаунта и сообщает о параллельном удалении
+как `status: already_absent`, а не как ошибку MCP.
 
 | Категория | Инструменты |
 |-----------|-------------|

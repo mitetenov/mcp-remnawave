@@ -65,6 +65,13 @@ describe('support mode', () => {
         expect(tools).toContain('users_get_subscription_url_by_telegram_id');
     });
 
+    it('uses Telegram-scoped HWID tools in support mode', () => {
+        const { tools } = collect(true);
+
+        expect(tools).toContain('hwid_devices_list');
+        expect(tools).toContain('hwid_device_delete');
+    });
+
     it('every profile name exists in full mode', () => {
         const full = collect(false);
 
