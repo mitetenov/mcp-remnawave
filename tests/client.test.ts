@@ -1,12 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { RemnawaveClient } from '../src/client/index.js';
 
-function createClient(overrides?: { baseUrl?: string; apiToken?: string; apiKey?: string }): RemnawaveClient {
+function createClient(overrides?: {
+    baseUrl?: string;
+    apiToken?: string;
+    apiKey?: string;
+    isSupport?: boolean;
+}): RemnawaveClient {
     return new RemnawaveClient({
         baseUrl: overrides?.baseUrl ?? 'https://panel.example.com',
         apiToken: overrides?.apiToken ?? 'test-token',
         apiKey: overrides?.apiKey,
-        isSupport: false,
+        isSupport: overrides?.isSupport ?? false,
     });
 }
 
@@ -16,6 +21,22 @@ function mockFetch(response: unknown, status = 200) {
         status,
         statusText: status === 200 ? 'OK' : 'Error',
         json: vi.fn().mockResolvedValue(response),
+    });
+}
+
+function mockFetchSequence(...responses: Array<{ body: unknown; status?: number }>) {
+    return vi.fn().mockImplementation(async () => {
+        const next = responses.shift();
+        if (!next) {
+            throw new Error('unexpected fetch call');
+        }
+        const status = next.status ?? 200;
+        return {
+            ok: status >= 200 && status < 300,
+            status,
+            statusText: status === 200 ? 'OK' : 'Error',
+            json: vi.fn().mockResolvedValue(next.body),
+        };
     });
 }
 
@@ -981,6 +1002,73 @@ describe('RemnawaveClient', () => {
                 expect.stringContaining('/api/hwid/devices'),
                 expect.objectContaining({ method: 'GET' }),
             );
+        });
+
+        it('support list resolves devices for every account of the Telegram ID', async () => {
+            const client = createClient({ isSupport: true });
+            const fetch = mockFetchSequence(
+                { body: { response: { users: [{ id: 7, username: 'first' }, { id: 8, username: 'second' }] } } },
+                { body: { response: { total: 1, devices: [{ hwid: 'hwid-first' }] } } },
+                { body: { response: { total: 1, devices: [{ hwid: 'hwid-second' }] } } },
+            );
+            vi.stubGlobal('fetch', fetch);
+
+            const result = await client.getSupportHwidDevicesByTelegramId(123);
+
+            expect(result.response.total).toBe(2);
+            expect(result.response.accounts).toEqual([
+                { userId: 7, username: 'first', devices: [{ hwid: 'hwid-first' }] },
+                { userId: 8, username: 'second', devices: [{ hwid: 'hwid-second' }] },
+            ]);
+            expect(fetch.mock.calls[0][0]).toContain('/api/users/stream?telegramId=123');
+            expect(fetch.mock.calls[1][0]).toContain('/api/hwid/devices/7');
+            expect(fetch.mock.calls[2][0]).toContain('/api/hwid/devices/8');
+        });
+
+        it('support delete refuses a device from another account without calling delete', async () => {
+            const client = createClient({ isSupport: true });
+            const fetch = mockFetchSequence(
+                { body: { response: { users: [{ id: 7 }] } } },
+                { body: { response: { total: 1, devices: [{ hwid: 'current-device' }] } } },
+            );
+            vi.stubGlobal('fetch', fetch);
+
+            const result = await client.deleteSupportHwidDeviceByTelegramId(
+                123,
+                7,
+                'stale-device',
+            );
+
+            expect(result).toEqual({
+                status: 'already_absent',
+                userId: 7,
+                hwid: 'stale-device',
+            });
+            expect(fetch).toHaveBeenCalledTimes(2);
+        });
+
+        it('support delete treats a concurrent HWID removal as already absent', async () => {
+            const client = createClient({ isSupport: true });
+            const fetch = mockFetchSequence(
+                { body: { response: { users: [{ id: 7 }] } } },
+                { body: { response: { total: 1, devices: [{ hwid: 'current-device' }] } } },
+                { body: { message: 'HWID device not found' }, status: 404 },
+                { body: { response: { total: 0, devices: [] } } },
+            );
+            vi.stubGlobal('fetch', fetch);
+
+            const result = await client.deleteSupportHwidDeviceByTelegramId(
+                123,
+                7,
+                'current-device',
+            );
+
+            expect(result).toEqual({
+                status: 'already_absent',
+                userId: 7,
+                hwid: 'current-device',
+            });
+            expect(fetch).toHaveBeenCalledTimes(4);
         });
     });
 

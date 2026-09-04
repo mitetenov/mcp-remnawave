@@ -7,6 +7,11 @@ export function registerHwidTools(
     server: McpServer,
     client: RemnawaveClient,
 ) {
+    if (client.isSupportMode) {
+        registerSupportHwidTools(server, client);
+        return;
+    }
+
     server.registerTool(
         'hwid_devices_list',
         {
@@ -127,6 +132,76 @@ export function registerHwidTools(
             try {
                 const result =
                     await client.deleteAllUserHwidDevices({ userId });
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+}
+
+function registerSupportHwidTools(
+    server: McpServer,
+    client: RemnawaveClient,
+) {
+    server.registerTool(
+        'hwid_devices_list',
+        {
+            description:
+                'List the current HWID devices across every Remnawave account owned by the authenticated Telegram ID',
+            inputSchema: z.object({
+                telegramId: z.number().describe('Authenticated Telegram user ID'),
+            }),
+        },
+        async ({ telegramId }) => {
+            try {
+                const result = await client.getSupportHwidDevicesByTelegramId(telegramId);
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.registerTool(
+        'hwid_device_delete',
+        {
+            description:
+                'Delete one HWID device after verifying that its userId belongs to the authenticated Telegram ID and that the exact hwid is current',
+            inputSchema: z.object({
+                telegramId: z.number().describe('Authenticated Telegram user ID'),
+                userId: z.number().describe('User ID from the current HWID list'),
+                hwid: z.string().describe('HWID from the current HWID list'),
+            }),
+        },
+        async ({ telegramId, userId, hwid }) => {
+            try {
+                const result = await client.deleteSupportHwidDeviceByTelegramId(
+                    telegramId,
+                    userId,
+                    hwid,
+                );
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    // Keep the declared support surface stable for direct MCP consumers. The
+    // Python support router deliberately withholds this bulk mutation.
+    server.registerTool(
+        'hwid_devices_delete_all',
+        {
+            description: 'Delete all HWID devices for a user',
+            inputSchema: z.object({
+                userId: z.number().describe('User ID'),
+            }),
+        },
+        async ({ userId }) => {
+            try {
+                const result = await client.deleteAllUserHwidDevices({ userId });
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);

@@ -116,6 +116,11 @@ export class RemnawaveClient {
         }
     }
 
+    /** Whether this client is restricted to the support-bot surface. */
+    get isSupportMode(): boolean {
+        return this.isSupport;
+    }
+
     private async request<T = unknown>(
         method: string,
         path: string,
@@ -638,6 +643,35 @@ export class RemnawaveClient {
         return this.get(REST_API.HWID.GET_USER_HWID_DEVICES(String(userId)));
     }
 
+    /**
+     * Return one current HWID snapshot for every panel account owned by a
+     * Telegram identity. Support callers must not make the model stitch
+     * together userId/hwid pairs from separate calls: one Telegram ID can own
+     * more than one Remnawave account, and device names are not unique.
+     */
+    async getSupportHwidDevicesByTelegramId(telegramId: number) {
+        const usersResult = await this.getUsersByTelegramId(telegramId, 100);
+        const users = RemnawaveClient.extractUsers(usersResult);
+        const accounts = await Promise.all(
+            users.map(async (user) => {
+                const devicesResult = await this.getUserHwidDevices(user.id);
+                const devices = RemnawaveClient.extractHwidDevices(devicesResult);
+                return {
+                    userId: user.id,
+                    username: user.username,
+                    devices,
+                };
+            }),
+        );
+
+        return {
+            response: {
+                total: accounts.reduce((sum, account) => sum + account.devices.length, 0),
+                accounts,
+            },
+        };
+    }
+
     async getAllHwidDevices() {
         return this.get(REST_API.HWID.GET_ALL_HWID_DEVICES);
     }
@@ -658,8 +692,109 @@ export class RemnawaveClient {
         return this.post(REST_API.HWID.DELETE_USER_HWID_DEVICE, params);
     }
 
+    /**
+     * Delete a support user's device only after resolving and validating the
+     * owning account in the current panel state. A concurrent delete is
+     * reported as already_absent instead of becoming an MCP tool error.
+     */
+    async deleteSupportHwidDeviceByTelegramId(
+        telegramId: number,
+        userId: number,
+        hwid: string,
+    ) {
+        const usersResult = await this.getUsersByTelegramId(telegramId, 100);
+        const users = RemnawaveClient.extractUsers(usersResult);
+        if (!users.some((user) => user.id === userId)) {
+            return {
+                status: 'already_absent',
+                userId,
+                hwid,
+                reason: 'account_not_owned_by_telegram_id',
+            };
+        }
+
+        const devicesResult = await this.getUserHwidDevices(userId);
+        const devices = RemnawaveClient.extractHwidDevices(devicesResult);
+        if (!devices.some((device) => device.hwid === hwid)) {
+            return { status: 'already_absent', userId, hwid };
+        }
+
+        try {
+            const result = await this.deleteHwidDevice({ userId, hwid });
+            return { status: 'deleted', userId, hwid, result };
+        } catch (error) {
+            if (!RemnawaveClient.isHwidDeviceNotFound(error)) {
+                throw error;
+            }
+
+            // The device may have disappeared after the fresh read. Confirm
+            // that state before treating the panel's 404 as an idempotent
+            // success; unrelated API failures must still surface normally.
+            const freshResult = await this.getUserHwidDevices(userId);
+            const freshDevices = RemnawaveClient.extractHwidDevices(freshResult);
+            if (!freshDevices.some((device) => device.hwid === hwid)) {
+                return { status: 'already_absent', userId, hwid };
+            }
+            throw error;
+        }
+    }
+
     async deleteAllUserHwidDevices(params: DeleteAllUserHwidDevicesCommand.RequestBody) {
         return this.post(REST_API.HWID.DELETE_ALL_USER_HWID_DEVICES, params);
+    }
+
+    private static extractUsers(value: unknown): Array<{ id: number; username?: string }> {
+        const response = RemnawaveClient.responseRecord(value);
+        const users = response.users;
+        if (!Array.isArray(users)) {
+            throw new Error('Remnawave API returned an invalid users response');
+        }
+        return users.flatMap((user) => {
+            if (!user || typeof user !== 'object') {
+                return [];
+            }
+            const record = user as Record<string, unknown>;
+            return typeof record.id === 'number'
+                ? [{
+                      id: record.id,
+                      ...(typeof record.username === 'string'
+                          ? { username: record.username }
+                          : {}),
+                  }]
+                : [];
+        });
+    }
+
+    private static extractHwidDevices(value: unknown): Array<Record<string, unknown> & { hwid: string }> {
+        const response = RemnawaveClient.responseRecord(value);
+        const devices = response.devices;
+        if (!Array.isArray(devices)) {
+            throw new Error('Remnawave API returned an invalid HWID response');
+        }
+        return devices.flatMap((device) => {
+            if (!device || typeof device !== 'object') {
+                return [];
+            }
+            const record = device as Record<string, unknown>;
+            return typeof record.hwid === 'string'
+                ? [record as Record<string, unknown> & { hwid: string }]
+                : [];
+        });
+    }
+
+    private static responseRecord(value: unknown): Record<string, unknown> {
+        if (!value || typeof value !== 'object') {
+            throw new Error('Remnawave API returned an invalid response');
+        }
+        const response = (value as Record<string, unknown>).response;
+        if (!response || typeof response !== 'object') {
+            throw new Error('Remnawave API returned an invalid response');
+        }
+        return response as Record<string, unknown>;
+    }
+
+    private static isHwidDeviceNotFound(error: unknown): boolean {
+        return error instanceof Error && /hwid\s+device\s+not\s+found/i.test(error.message);
     }
 
     // Bandwidth Stats
