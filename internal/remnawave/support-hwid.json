@@ -1,0 +1,46 @@
+[
+  {
+    "name": "hwid_devices_list",
+    "description": "List the current HWID devices across every Remnawave account owned by the authenticated Telegram ID",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "telegramId": {
+          "type": "number",
+          "description": "Authenticated Telegram user ID"
+        }
+      },
+      "required": [
+        "telegramId"
+      ]
+    }
+  },
+  {
+    "name": "hwid_device_delete",
+    "description": "Delete one HWID device after verifying that its userId belongs to the authenticated Telegram ID and that the exact hwid is current",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "telegramId": {
+          "type": "number",
+          "description": "Authenticated Telegram user ID"
+        },
+        "userId": {
+          "type": "number",
+          "description": "User ID from the current HWID list"
+        },
+        "hwid": {
+          "type": "string",
+          "description": "HWID from the current HWID list"
+        }
+      },
+      "required": [
+        "telegramId",
+        "userId",
+        "hwid"
+      ]
+    }
+  }
+]

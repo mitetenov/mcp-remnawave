@@ -1,0 +1,4082 @@
+[
+  {
+    "name": "users_list",
+    "description": "List all Remnawave VPN users with pagination",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "start": {
+          "default": 0,
+          "description": "Offset for pagination",
+          "type": "number"
+        },
+        "size": {
+          "default": 25,
+          "description": "Number of users to return",
+          "type": "number"
+        }
+      }
+    }
+  },
+  {
+    "name": "users_get",
+    "description": "Get a specific Remnawave user by their numeric ID",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        }
+      },
+      "required": [
+        "userId"
+      ]
+    }
+  },
+  {
+    "name": "users_get_by_username",
+    "description": "Get a Remnawave user by their username",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string",
+          "description": "Username"
+        }
+      },
+      "required": [
+        "username"
+      ]
+    }
+  },
+  {
+    "name": "users_get_by_short_uuid",
+    "description": "Get a Remnawave user by their short UUID",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "shortUuid": {
+          "type": "string",
+          "description": "Short UUID"
+        }
+      },
+      "required": [
+        "shortUuid"
+      ]
+    }
+  },
+  {
+    "name": "users_get_by_telegram_id",
+    "description": "Get Remnawave users by their Telegram ID. Returns a list — one Telegram ID may own several accounts.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "telegramId": {
+          "type": "number",
+          "description": "Telegram user ID"
+        },
+        "size": {
+          "description": "Max users to return (default 25)",
+          "type": "number"
+        }
+      },
+      "required": [
+        "telegramId"
+      ]
+    }
+  },
+  {
+    "name": "users_get_subscription_url_by_telegram_id",
+    "description": "Get the only unambiguous VPN subscription URL for the authenticated Telegram user. Returns no URL if several distinct accounts match.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "telegramId": {
+          "type": "number",
+          "description": "Authenticated Telegram user ID"
+        }
+      },
+      "required": [
+        "telegramId"
+      ]
+    }
+  },
+  {
+    "name": "users_accessible_nodes",
+    "description": "List nodes a Remnawave user can connect to",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        }
+      },
+      "required": [
+        "userId"
+      ]
+    }
+  },
+  {
+    "name": "users_tags_list",
+    "description": "List all user tags",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "users_resolve",
+    "description": "Search and resolve a user by ID, short UUID, or username. Exactly one of the fields must be provided.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "User numeric ID",
+          "type": "number"
+        },
+        "shortUuid": {
+          "description": "Short UUID",
+          "type": "string"
+        },
+        "username": {
+          "description": "Username",
+          "type": "string"
+        }
+      }
+    }
+  },
+  {
+    "name": "users_create",
+    "description": "Create a new VPN user in Remnawave",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string",
+          "description": "Unique username"
+        },
+        "expireAt": {
+          "type": "string",
+          "description": "Expiration date in ISO 8601 format"
+        },
+        "trafficLimitBytes": {
+          "description": "Traffic limit in bytes (0 = unlimited)",
+          "type": "number"
+        },
+        "trafficLimitStrategy": {
+          "description": "Traffic reset period",
+          "type": "string",
+          "enum": [
+            "NO_RESET",
+            "DAY",
+            "WEEK",
+            "MONTH",
+            "MONTH_ROLLING"
+          ]
+        },
+        "status": {
+          "description": "Initial user status",
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "DISABLED"
+          ]
+        },
+        "description": {
+          "description": "User description",
+          "type": "string"
+        },
+        "tag": {
+          "description": "User tag for grouping",
+          "type": "string"
+        },
+        "telegramId": {
+          "description": "Telegram user ID",
+          "type": "number"
+        },
+        "email": {
+          "description": "User email",
+          "type": "string"
+        },
+        "hwidDeviceLimit": {
+          "description": "Max number of HWID devices",
+          "type": "number"
+        },
+        "activeInternalSquads": {
+          "description": "Array of internal squad UUIDs",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "shortUuid": {
+          "description": "Custom short UUID for the user",
+          "type": "string"
+        },
+        "externalSquadUuid": {
+          "description": "External squad UUID",
+          "type": "string"
+        }
+      },
+      "required": [
+        "username",
+        "expireAt"
+      ]
+    }
+  },
+  {
+    "name": "users_update",
+    "description": "Update an existing Remnawave user. Identify the user by id or username.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "User ID to update",
+          "type": "number"
+        },
+        "username": {
+          "description": "Username of the user to update (alternative to id)",
+          "type": "string"
+        },
+        "expireAt": {
+          "description": "New expiration date (ISO 8601)",
+          "type": "string"
+        },
+        "trafficLimitBytes": {
+          "description": "New traffic limit in bytes",
+          "type": "number"
+        },
+        "trafficLimitStrategy": {
+          "description": "Traffic reset period",
+          "type": "string",
+          "enum": [
+            "NO_RESET",
+            "DAY",
+            "WEEK",
+            "MONTH",
+            "MONTH_ROLLING"
+          ]
+        },
+        "status": {
+          "description": "User status",
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "DISABLED"
+          ]
+        },
+        "description": {
+          "description": "User description",
+          "type": "string"
+        },
+        "tag": {
+          "description": "User tag",
+          "type": "string"
+        },
+        "telegramId": {
+          "description": "Telegram user ID",
+          "type": "number"
+        },
+        "email": {
+          "description": "User email",
+          "type": "string"
+        },
+        "hwidDeviceLimit": {
+          "description": "Max HWID devices",
+          "type": "number"
+        },
+        "activeInternalSquads": {
+          "description": "Internal squad UUIDs",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "externalSquadUuid": {
+          "description": "External squad UUID",
+          "type": "string"
+        }
+      }
+    }
+  },
+  {
+    "name": "users_delete",
+    "description": "Permanently delete a Remnawave user",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID to delete"
+        }
+      },
+      "required": [
+        "userId"
+      ]
+    }
+  },
+  {
+    "name": "users_enable",
+    "description": "Enable a disabled Remnawave user (restore VPN access)",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        }
+      },
+      "required": [
+        "userId"
+      ]
+    }
+  },
+  {
+    "name": "users_disable",
+    "description": "Disable a Remnawave user (block VPN access)",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        }
+      },
+      "required": [
+        "userId"
+      ]
+    }
+  },
+  {
+    "name": "users_revoke_subscription",
+    "description": "Revoke subscription for a Remnawave user (generates new subscription link)",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        }
+      },
+      "required": [
+        "userId"
+      ]
+    }
+  },
+  {
+    "name": "users_reset_traffic",
+    "description": "Reset traffic counter for a Remnawave user",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        }
+      },
+      "required": [
+        "userId"
+      ]
+    }
+  },
+  {
+    "name": "users_extend_expiration",
+    "description": "Extend expiration date for a single Remnawave user. An EXPIRED user is extended from today and becomes ACTIVE.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        },
+        "days": {
+          "type": "number",
+          "description": "Number of days to extend"
+        }
+      },
+      "required": [
+        "userId",
+        "days"
+      ]
+    }
+  },
+  {
+    "name": "users_bulk_delete_by_status",
+    "description": "Bulk delete users by status",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "DISABLED",
+            "LIMITED",
+            "EXPIRED"
+          ],
+          "description": "User status to delete"
+        }
+      },
+      "required": [
+        "status"
+      ]
+    }
+  },
+  {
+    "name": "users_bulk_update",
+    "description": "Bulk update selected users",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "Array of user IDs to update"
+        },
+        "status": {
+          "description": "New status",
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "DISABLED",
+            "LIMITED",
+            "EXPIRED"
+          ]
+        },
+        "expireAt": {
+          "description": "New expiration date (ISO 8601)",
+          "type": "string"
+        },
+        "trafficLimitBytes": {
+          "description": "New traffic limit",
+          "type": "number"
+        },
+        "trafficLimitStrategy": {
+          "description": "Traffic reset period",
+          "type": "string",
+          "enum": [
+            "NO_RESET",
+            "DAY",
+            "WEEK",
+            "MONTH",
+            "MONTH_ROLLING"
+          ]
+        },
+        "description": {
+          "description": "User description",
+          "type": "string"
+        },
+        "telegramId": {
+          "description": "Telegram user ID",
+          "type": "number"
+        },
+        "email": {
+          "description": "User email",
+          "type": "string"
+        },
+        "tag": {
+          "description": "User tag",
+          "type": "string"
+        },
+        "hwidDeviceLimit": {
+          "description": "Max HWID devices",
+          "type": "number"
+        },
+        "externalSquadUuid": {
+          "description": "External squad UUID",
+          "type": "string"
+        }
+      },
+      "required": [
+        "userIds"
+      ]
+    }
+  },
+  {
+    "name": "users_bulk_reset_traffic",
+    "description": "Bulk reset traffic for selected users",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "Array of user IDs"
+        }
+      },
+      "required": [
+        "userIds"
+      ]
+    }
+  },
+  {
+    "name": "users_bulk_revoke_subscription",
+    "description": "Bulk revoke subscriptions for selected users",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "Array of user IDs"
+        }
+      },
+      "required": [
+        "userIds"
+      ]
+    }
+  },
+  {
+    "name": "users_bulk_delete",
+    "description": "Bulk delete selected users",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "Array of user IDs to delete"
+        }
+      },
+      "required": [
+        "userIds"
+      ]
+    }
+  },
+  {
+    "name": "users_bulk_update_squads",
+    "description": "Bulk update squad assignments for selected users",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "Array of user IDs"
+        },
+        "activeInternalSquads": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Squad UUIDs to assign"
+        }
+      },
+      "required": [
+        "userIds",
+        "activeInternalSquads"
+      ]
+    }
+  },
+  {
+    "name": "users_bulk_extend_expiration",
+    "description": "Bulk extend expiration date for selected users",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "Array of user IDs"
+        },
+        "extendDays": {
+          "type": "number",
+          "description": "Number of days to extend"
+        }
+      },
+      "required": [
+        "userIds",
+        "extendDays"
+      ]
+    }
+  },
+  {
+    "name": "users_bulk_all_update",
+    "description": "Update ALL users at once",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "status": {
+          "description": "New status for all",
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "DISABLED",
+            "LIMITED",
+            "EXPIRED"
+          ]
+        },
+        "expireAt": {
+          "description": "New expiration date for all",
+          "type": "string"
+        },
+        "trafficLimitBytes": {
+          "description": "Traffic limit in bytes",
+          "type": "number"
+        },
+        "trafficLimitStrategy": {
+          "description": "Traffic reset period",
+          "type": "string",
+          "enum": [
+            "NO_RESET",
+            "DAY",
+            "WEEK",
+            "MONTH",
+            "MONTH_ROLLING"
+          ]
+        },
+        "description": {
+          "description": "User description",
+          "type": "string"
+        },
+        "telegramId": {
+          "description": "Telegram user ID",
+          "type": "number"
+        },
+        "email": {
+          "description": "User email",
+          "type": "string"
+        },
+        "tag": {
+          "description": "User tag",
+          "type": "string"
+        },
+        "hwidDeviceLimit": {
+          "description": "Max HWID devices",
+          "type": "number"
+        }
+      }
+    }
+  },
+  {
+    "name": "users_bulk_all_reset_traffic",
+    "description": "Reset traffic counters for ALL users",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "users_bulk_all_extend_expiration",
+    "description": "Extend expiration date for ALL users",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "extendDays": {
+          "type": "number",
+          "description": "Number of days to extend"
+        }
+      },
+      "required": [
+        "extendDays"
+      ]
+    }
+  },
+  {
+    "name": "nodes_list",
+    "description": "List all Remnawave nodes",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "nodes_get",
+    "description": "Get a specific node by UUID",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Node UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "nodes_tags_list",
+    "description": "List all node tags",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "nodes_create",
+    "description": "Create a new node in Remnawave",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Node name"
+        },
+        "address": {
+          "type": "string",
+          "description": "Node address (IP or hostname)"
+        },
+        "port": {
+          "description": "Node port",
+          "type": "number"
+        },
+        "countryCode": {
+          "description": "Country code (e.g. US, DE, NL)",
+          "type": "string"
+        },
+        "isTrafficTrackingActive": {
+          "description": "Enable traffic tracking",
+          "type": "boolean"
+        },
+        "trafficLimitBytes": {
+          "description": "Traffic limit in bytes",
+          "type": "number"
+        },
+        "trafficResetDay": {
+          "description": "Day of month to reset traffic (1-31)",
+          "type": "number"
+        },
+        "notifyPercent": {
+          "description": "Traffic notification threshold percentage",
+          "type": "number"
+        },
+        "consumptionMultiplier": {
+          "description": "Traffic consumption multiplier",
+          "type": "number"
+        },
+        "nodeConsumptionMultiplier": {
+          "description": "Node consumption multiplier (Remnawave 2.8+)",
+          "type": "number"
+        },
+        "note": {
+          "description": "Node note (max 255 chars)",
+          "type": "string",
+          "maxLength": 255
+        },
+        "proxyUrl": {
+          "description": "SOCKS5 proxy URL",
+          "type": "string"
+        },
+        "activeConfigProfileUuid": {
+          "type": "string",
+          "description": "Config profile UUID to assign"
+        },
+        "activeInbounds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of inbound UUIDs to enable"
+        }
+      },
+      "required": [
+        "name",
+        "address",
+        "activeConfigProfileUuid",
+        "activeInbounds"
+      ]
+    }
+  },
+  {
+    "name": "nodes_update",
+    "description": "Update an existing node",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Node UUID to update"
+        },
+        "name": {
+          "description": "New node name",
+          "type": "string"
+        },
+        "address": {
+          "description": "New address",
+          "type": "string"
+        },
+        "port": {
+          "description": "New port",
+          "type": "number"
+        },
+        "countryCode": {
+          "description": "New country code",
+          "type": "string"
+        },
+        "isTrafficTrackingActive": {
+          "description": "Enable/disable traffic tracking",
+          "type": "boolean"
+        },
+        "trafficLimitBytes": {
+          "description": "New traffic limit",
+          "type": "number"
+        },
+        "trafficResetDay": {
+          "description": "New traffic reset day",
+          "type": "number"
+        },
+        "notifyPercent": {
+          "description": "New notification threshold",
+          "type": "number"
+        },
+        "consumptionMultiplier": {
+          "description": "New consumption multiplier",
+          "type": "number"
+        },
+        "nodeConsumptionMultiplier": {
+          "description": "New node consumption multiplier (Remnawave 2.8+)",
+          "type": "number"
+        },
+        "note": {
+          "description": "Node note (max 255 chars)",
+          "type": "string",
+          "maxLength": 255
+        },
+        "proxyUrl": {
+          "description": "SOCKS5 proxy URL",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "nodes_delete",
+    "description": "Delete a node from Remnawave",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Node UUID to delete"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "nodes_enable",
+    "description": "Enable a disabled node",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Node UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "nodes_disable",
+    "description": "Disable a node",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Node UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "nodes_restart",
+    "description": "Restart a specific node",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Node UUID"
+        },
+        "forceRestart": {
+          "type": "boolean",
+          "description": "Force restart (required by the panel)"
+        }
+      },
+      "required": [
+        "uuid",
+        "forceRestart"
+      ]
+    }
+  },
+  {
+    "name": "nodes_restart_all",
+    "description": "Restart all nodes",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "forceRestart": {
+          "type": "boolean",
+          "description": "Force restart (required by the panel)"
+        }
+      },
+      "required": [
+        "forceRestart"
+      ]
+    }
+  },
+  {
+    "name": "nodes_reset_traffic",
+    "description": "Reset traffic counter for a node",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Node UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "nodes_reorder",
+    "description": "Reorder nodes by providing an ordered array of node positions",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "viewPosition": {
+                "type": "number",
+                "description": "Sort position (0-based)"
+              },
+              "uuid": {
+                "type": "string",
+                "description": "Node UUID"
+              }
+            },
+            "required": [
+              "viewPosition",
+              "uuid"
+            ]
+          },
+          "description": "Ordered array of { viewPosition, uuid } objects"
+        }
+      },
+      "required": [
+        "nodes"
+      ]
+    }
+  },
+  {
+    "name": "nodes_bulk_profile_modification",
+    "description": "Bulk modify config profile for selected nodes",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of node UUIDs"
+        },
+        "configProfileUuid": {
+          "type": "string",
+          "description": "New config profile UUID"
+        },
+        "activeInbounds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of inbound UUIDs to enable"
+        }
+      },
+      "required": [
+        "uuids",
+        "configProfileUuid",
+        "activeInbounds"
+      ]
+    }
+  },
+  {
+    "name": "nodes_bulk_actions",
+    "description": "Bulk actions on selected nodes (enable/disable/restart/reset traffic)",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of node UUIDs"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "ENABLE",
+            "DISABLE",
+            "RESTART",
+            "RESET_TRAFFIC"
+          ],
+          "description": "Action to perform"
+        }
+      },
+      "required": [
+        "uuids",
+        "action"
+      ]
+    }
+  },
+  {
+    "name": "nodes_bulk_update",
+    "description": "Bulk update properties for selected nodes",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of node UUIDs"
+        },
+        "countryCode": {
+          "description": "New country code",
+          "type": "string"
+        },
+        "consumptionMultiplier": {
+          "description": "New consumption multiplier",
+          "type": "number"
+        },
+        "providerUuid": {
+          "description": "Infra provider UUID",
+          "type": "string"
+        },
+        "tags": {
+          "description": "Node tags",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "activePluginUuid": {
+          "description": "Active plugin UUID",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    }
+  },
+  {
+    "name": "hosts_list",
+    "description": "List all Remnawave hosts",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "hosts_get",
+    "description": "Get a specific host by UUID",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Host UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "hosts_tags_list",
+    "description": "List all host tags",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "hosts_create",
+    "description": "Create a new host in Remnawave",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "remark": {
+          "type": "string",
+          "description": "Host remark/name"
+        },
+        "address": {
+          "type": "string",
+          "description": "Host address"
+        },
+        "port": {
+          "type": "number",
+          "description": "Host port"
+        },
+        "configProfileUuid": {
+          "type": "string",
+          "description": "Config profile UUID"
+        },
+        "configProfileInboundUuid": {
+          "type": "string",
+          "description": "Config profile inbound UUID"
+        },
+        "path": {
+          "description": "URL path",
+          "type": "string"
+        },
+        "sni": {
+          "description": "SNI (Server Name Indication)",
+          "type": "string"
+        },
+        "host": {
+          "description": "Host header",
+          "type": "string"
+        },
+        "alpn": {
+          "description": "ALPN protocol",
+          "type": "string",
+          "enum": [
+            "h3",
+            "h2",
+            "http/1.1",
+            "h2,http/1.1",
+            "h3,h2,http/1.1",
+            "h3,h2"
+          ]
+        },
+        "fingerprint": {
+          "description": "TLS fingerprint (free string in Remnawave 2.8+)",
+          "type": "string"
+        },
+        "isDisabled": {
+          "description": "Create in disabled state",
+          "type": "boolean"
+        },
+        "isHidden": {
+          "description": "Hide from subscription list",
+          "type": "boolean"
+        },
+        "securityLayer": {
+          "description": "Security layer",
+          "type": "string",
+          "enum": [
+            "DEFAULT",
+            "TLS",
+            "NONE"
+          ]
+        },
+        "tags": {
+          "description": "Host tags (max 10, Remnawave 2.8+)",
+          "maxItems": 10,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "serverDescription": {
+          "description": "Server description",
+          "type": "string"
+        },
+        "nodes": {
+          "description": "Array of node UUIDs to assign",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "excludeFromSubscriptionTypes": {
+          "description": "Subscription types to exclude this host from",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "XRAY_JSON",
+              "XRAY_BASE64",
+              "MIHOMO",
+              "STASH",
+              "CLASH",
+              "SINGBOX"
+            ]
+          }
+        },
+        "xrayJsonTemplateUuid": {
+          "description": "Xray JSON template UUID",
+          "type": "string"
+        },
+        "excludedInternalSquads": {
+          "description": "Internal squad UUIDs to exclude host from",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "overrideSniFromAddress": {
+          "description": "Override SNI from address",
+          "type": "boolean"
+        },
+        "keepSniBlank": {
+          "description": "Keep SNI field blank",
+          "type": "boolean"
+        },
+        "allowInsecure": {
+          "description": "Allow insecure connections",
+          "type": "boolean"
+        },
+        "vlessRouteId": {
+          "description": "VLESS route ID (0-65535)",
+          "type": "number"
+        },
+        "shuffleHost": {
+          "description": "Enable host shuffling",
+          "type": "boolean"
+        },
+        "mihomoX25519": {
+          "description": "Enable Mihomo X25519",
+          "type": "boolean"
+        },
+        "mihomoIpVersion": {
+          "description": "Mihomo IP version (Remnawave 2.8+)",
+          "type": "string",
+          "enum": [
+            "dual",
+            "ipv4",
+            "ipv6",
+            "ipv4-prefer",
+            "ipv6-prefer"
+          ]
+        },
+        "pinnedPeerCertSha256": {
+          "description": "Pinned peer certificate SHA256 (replaces allowInsecure)",
+          "type": "string"
+        },
+        "verifyPeerCertByName": {
+          "description": "Verify peer certificate by name (Remnawave 2.8+)",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "remark",
+        "address",
+        "port",
+        "configProfileUuid",
+        "configProfileInboundUuid"
+      ]
+    }
+  },
+  {
+    "name": "hosts_update",
+    "description": "Update an existing host",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Host UUID to update"
+        },
+        "remark": {
+          "description": "New remark/name",
+          "type": "string"
+        },
+        "address": {
+          "description": "New address",
+          "type": "string"
+        },
+        "port": {
+          "description": "New port",
+          "type": "number"
+        },
+        "configProfileUuid": {
+          "description": "New config profile UUID",
+          "type": "string"
+        },
+        "configProfileInboundUuid": {
+          "description": "New config profile inbound UUID",
+          "type": "string"
+        },
+        "path": {
+          "description": "New URL path",
+          "type": "string"
+        },
+        "sni": {
+          "description": "New SNI",
+          "type": "string"
+        },
+        "host": {
+          "description": "New host header",
+          "type": "string"
+        },
+        "alpn": {
+          "description": "New ALPN",
+          "type": "string",
+          "enum": [
+            "h3",
+            "h2",
+            "http/1.1",
+            "h2,http/1.1",
+            "h3,h2,http/1.1",
+            "h3,h2"
+          ]
+        },
+        "fingerprint": {
+          "description": "New fingerprint (free string in Remnawave 2.8+)",
+          "type": "string"
+        },
+        "isDisabled": {
+          "description": "Enable/disable host",
+          "type": "boolean"
+        },
+        "isHidden": {
+          "description": "Hide from subscription list",
+          "type": "boolean"
+        },
+        "securityLayer": {
+          "description": "New security layer",
+          "type": "string",
+          "enum": [
+            "DEFAULT",
+            "TLS",
+            "NONE"
+          ]
+        },
+        "tags": {
+          "description": "New tags (max 10, Remnawave 2.8+)",
+          "maxItems": 10,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "serverDescription": {
+          "description": "New server description",
+          "type": "string"
+        },
+        "nodes": {
+          "description": "New node UUIDs",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "excludeFromSubscriptionTypes": {
+          "description": "Subscription types to exclude this host from",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "XRAY_JSON",
+              "XRAY_BASE64",
+              "MIHOMO",
+              "STASH",
+              "CLASH",
+              "SINGBOX"
+            ]
+          }
+        },
+        "xrayJsonTemplateUuid": {
+          "description": "Xray JSON template UUID",
+          "type": "string"
+        },
+        "excludedInternalSquads": {
+          "description": "Internal squad UUIDs to exclude host from",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "overrideSniFromAddress": {
+          "description": "Override SNI from address",
+          "type": "boolean"
+        },
+        "keepSniBlank": {
+          "description": "Keep SNI field blank",
+          "type": "boolean"
+        },
+        "vlessRouteId": {
+          "description": "VLESS route ID (0-65535)",
+          "type": "number"
+        },
+        "shuffleHost": {
+          "description": "Enable host shuffling",
+          "type": "boolean"
+        },
+        "mihomoX25519": {
+          "description": "Enable Mihomo X25519",
+          "type": "boolean"
+        },
+        "mihomoIpVersion": {
+          "description": "Mihomo IP version (Remnawave 2.8+)",
+          "type": "string",
+          "enum": [
+            "dual",
+            "ipv4",
+            "ipv6",
+            "ipv4-prefer",
+            "ipv6-prefer"
+          ]
+        },
+        "pinnedPeerCertSha256": {
+          "description": "Pinned peer certificate SHA256 (replaces allowInsecure)",
+          "type": "string"
+        },
+        "verifyPeerCertByName": {
+          "description": "Verify peer certificate by name (Remnawave 2.8+)",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "hosts_delete",
+    "description": "Delete a host from Remnawave",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Host UUID to delete"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "hosts_bulk_enable",
+    "description": "Bulk enable selected hosts",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of host UUIDs"
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    }
+  },
+  {
+    "name": "hosts_bulk_disable",
+    "description": "Bulk disable selected hosts",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of host UUIDs"
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    }
+  },
+  {
+    "name": "hosts_bulk_delete",
+    "description": "Bulk delete selected hosts",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of host UUIDs"
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    }
+  },
+  {
+    "name": "hosts_bulk_set_inbound",
+    "description": "Bulk set inbound for selected hosts",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of host UUIDs"
+        },
+        "configProfileUuid": {
+          "type": "string",
+          "description": "Config profile UUID"
+        },
+        "configProfileInboundUuid": {
+          "type": "string",
+          "description": "Inbound UUID"
+        }
+      },
+      "required": [
+        "uuids",
+        "configProfileUuid",
+        "configProfileInboundUuid"
+      ]
+    }
+  },
+  {
+    "name": "hosts_bulk_set_port",
+    "description": "Bulk set port for selected hosts",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of host UUIDs"
+        },
+        "port": {
+          "type": "number",
+          "description": "New port number"
+        }
+      },
+      "required": [
+        "uuids",
+        "port"
+      ]
+    }
+  },
+  {
+    "name": "system_stats",
+    "description": "Get overall Remnawave panel statistics (users, nodes, traffic, memory, CPU)",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "system_bandwidth_stats",
+    "description": "Get bandwidth statistics",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "system_nodes_metrics",
+    "description": "Get detailed node metrics",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "system_nodes_statistics",
+    "description": "Get node statistics",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "system_health",
+    "description": "Check Remnawave panel health status",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "system_metadata",
+    "description": "Get Remnawave panel metadata and version information",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "system_generate_x25519",
+    "description": "Generate X25519 key pair for VLESS Reality",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "auth_status",
+    "description": "Check current authentication status with Remnawave panel",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "system_stats_recap",
+    "description": "Get system statistics recap",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "system_stats_digest",
+    "description": "Get a digest of system statistics",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string",
+          "description": "Start of the period, ISO 8601 with timezone offset (e.g. 2026-07-15T00:00:00Z)"
+        },
+        "end": {
+          "type": "string",
+          "description": "End of the period, ISO 8601 with timezone offset (e.g. 2026-07-15T00:00:00Z)"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ]
+    }
+  },
+  {
+    "name": "system_http_stats",
+    "description": "Get HTTP route statistics of the panel",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "system_configuration",
+    "description": "Get the current panel configuration",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "system_srr_matcher",
+    "description": "Test subscription request routing rules",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "responseRules": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {},
+          "description": "Response rules configuration object with version and rules array"
+        }
+      },
+      "required": [
+        "responseRules"
+      ]
+    }
+  },
+  {
+    "name": "subscriptions_list",
+    "description": "List all subscriptions with pagination",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "start": {
+          "default": 0,
+          "description": "Offset for pagination",
+          "type": "number"
+        },
+        "size": {
+          "default": 25,
+          "description": "Number of subscriptions",
+          "type": "number"
+        }
+      }
+    }
+  },
+  {
+    "name": "subscriptions_get_by_user_id",
+    "description": "Get subscription details by user ID",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        }
+      },
+      "required": [
+        "userId"
+      ]
+    }
+  },
+  {
+    "name": "subscriptions_get_by_username",
+    "description": "Get subscription details by username",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string",
+          "description": "Username"
+        }
+      },
+      "required": [
+        "username"
+      ]
+    }
+  },
+  {
+    "name": "subscriptions_get_by_short_uuid",
+    "description": "Get subscription details by short UUID",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "shortUuid": {
+          "type": "string",
+          "description": "Short UUID"
+        }
+      },
+      "required": [
+        "shortUuid"
+      ]
+    }
+  },
+  {
+    "name": "subscription_info",
+    "description": "Get subscription info by short UUID (public endpoint)",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "shortUuid": {
+          "type": "string",
+          "description": "Short UUID"
+        }
+      },
+      "required": [
+        "shortUuid"
+      ]
+    }
+  },
+  {
+    "name": "subscriptions_get_raw_by_short_uuid",
+    "description": "Get raw subscription config by short UUID",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "shortUuid": {
+          "type": "string",
+          "description": "Short UUID"
+        }
+      },
+      "required": [
+        "shortUuid"
+      ]
+    }
+  },
+  {
+    "name": "subscriptions_get_subpage_config",
+    "description": "Get subscription page configuration",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "shortUuid": {
+          "type": "string",
+          "description": "Short UUID"
+        }
+      },
+      "required": [
+        "shortUuid"
+      ]
+    }
+  },
+  {
+    "name": "subscriptions_get_connection_keys",
+    "description": "Get connection keys for a subscription",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        }
+      },
+      "required": [
+        "userId"
+      ]
+    }
+  },
+  {
+    "name": "subscription_request_history_list",
+    "description": "List subscription request history",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "subscription_request_history_stats",
+    "description": "Get subscription request history statistics",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "config_profiles_list",
+    "description": "List all config profiles",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "config_profiles_get",
+    "description": "Get a config profile by UUID",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Config profile UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "inbounds_list",
+    "description": "List all inbounds from all config profiles",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "config_profiles_get_inbounds",
+    "description": "Get inbounds for a specific config profile",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Config profile UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "config_profiles_get_computed_config",
+    "description": "Get computed configuration for a config profile",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Config profile UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "config_profiles_create",
+    "description": "Create a new config profile",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Profile name"
+        },
+        "config": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {},
+          "description": "Config profile configuration object"
+        }
+      },
+      "required": [
+        "name",
+        "config"
+      ]
+    }
+  },
+  {
+    "name": "config_profiles_update",
+    "description": "Update a config profile",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Profile UUID"
+        },
+        "name": {
+          "description": "New name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "config_profiles_delete",
+    "description": "Delete a config profile",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Profile UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "config_profiles_reorder",
+    "description": "Reorder config profiles",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "viewPosition": {
+                "type": "number",
+                "description": "Sort position (0-based)"
+              },
+              "uuid": {
+                "type": "string",
+                "description": "Config profile UUID"
+              }
+            },
+            "required": [
+              "viewPosition",
+              "uuid"
+            ]
+          },
+          "description": "Ordered array of { viewPosition, uuid } objects"
+        }
+      },
+      "required": [
+        "items"
+      ]
+    }
+  },
+  {
+    "name": "squads_list",
+    "description": "List all internal squads",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "squads_accessible_nodes",
+    "description": "Get nodes accessible to a specific squad",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Squad UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "squads_create",
+    "description": "Create a new internal squad",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Squad name"
+        },
+        "inbounds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of inbound UUIDs"
+        }
+      },
+      "required": [
+        "name",
+        "inbounds"
+      ]
+    }
+  },
+  {
+    "name": "squads_update",
+    "description": "Update an internal squad",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Squad UUID"
+        },
+        "name": {
+          "description": "New squad name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "squads_delete",
+    "description": "Delete an internal squad",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Squad UUID to delete"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "squads_add_users",
+    "description": "Add specific users to an internal squad",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "squadUuid": {
+          "type": "string",
+          "description": "Squad UUID"
+        },
+        "userIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "Array of user IDs to add (max 1000)"
+        }
+      },
+      "required": [
+        "squadUuid",
+        "userIds"
+      ]
+    }
+  },
+  {
+    "name": "squads_remove_users",
+    "description": "Remove specific users from an internal squad",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "squadUuid": {
+          "type": "string",
+          "description": "Squad UUID"
+        },
+        "userIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "Array of user IDs to remove (max 1000)"
+        }
+      },
+      "required": [
+        "squadUuid",
+        "userIds"
+      ]
+    }
+  },
+  {
+    "name": "squads_add_all_users",
+    "description": "Add EVERY user on the panel to an internal squad",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "squadUuid": {
+          "type": "string",
+          "description": "Squad UUID"
+        }
+      },
+      "required": [
+        "squadUuid"
+      ]
+    }
+  },
+  {
+    "name": "squads_remove_all_users",
+    "description": "Remove EVERY user from an internal squad",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "squadUuid": {
+          "type": "string",
+          "description": "Squad UUID"
+        }
+      },
+      "required": [
+        "squadUuid"
+      ]
+    }
+  },
+  {
+    "name": "hwid_devices_list",
+    "description": "List HWID devices for a specific user",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        }
+      },
+      "required": [
+        "userId"
+      ]
+    }
+  },
+  {
+    "name": "hwid_devices_list_all",
+    "description": "List all HWID devices across all users",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "hwid_stats",
+    "description": "Get HWID device statistics",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "hwid_top_users",
+    "description": "Get users with most HWID devices",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "hwid_device_create",
+    "description": "Create a HWID device entry for a user",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        },
+        "hwid": {
+          "type": "string",
+          "description": "Hardware ID (10-64 chars, letters/digits/=/-)"
+        },
+        "platform": {
+          "description": "Device platform",
+          "type": "string"
+        },
+        "osVersion": {
+          "description": "OS version",
+          "type": "string"
+        },
+        "deviceModel": {
+          "description": "Device model",
+          "type": "string"
+        },
+        "userAgent": {
+          "description": "User agent string",
+          "type": "string"
+        }
+      },
+      "required": [
+        "userId",
+        "hwid"
+      ]
+    }
+  },
+  {
+    "name": "hwid_device_delete",
+    "description": "Delete a specific HWID device",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        },
+        "hwid": {
+          "type": "string",
+          "description": "HWID of the device to delete"
+        }
+      },
+      "required": [
+        "userId",
+        "hwid"
+      ]
+    }
+  },
+  {
+    "name": "hwid_devices_delete_all",
+    "description": "Delete all HWID devices for a user",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        }
+      },
+      "required": [
+        "userId"
+      ]
+    }
+  },
+  {
+    "name": "api_tokens_list",
+    "description": "List all API tokens",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "api_tokens_create",
+    "description": "Create a new API token",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Token name (2-30 characters)"
+        },
+        "expiresInDays": {
+          "type": "number",
+          "description": "Expiration in days"
+        },
+        "scopes": {
+          "default": [
+            "*"
+          ],
+          "description": "API token scopes",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "expiresInDays"
+      ]
+    }
+  },
+  {
+    "name": "api_tokens_ott",
+    "description": "Get a short-lived token for the backend tools (Swagger, Scalar, Bull Board)",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "api_tokens_delete",
+    "description": "Delete an API token",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Token UUID to delete"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "keygen_get",
+    "description": "Generate a new SECRET_KEY for node configuration",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "billing_providers_list",
+    "description": "List all infrastructure billing providers",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "billing_provider_get",
+    "description": "Get a billing provider by UUID",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Provider UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "billing_nodes_list",
+    "description": "List all billing nodes",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "billing_history_list",
+    "description": "List billing history",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "billing_provider_create",
+    "description": "Create a new billing provider",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Provider name"
+        },
+        "faviconLink": {
+          "description": "Favicon URL",
+          "type": "string"
+        },
+        "loginUrl": {
+          "description": "Login page URL",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+  },
+  {
+    "name": "billing_provider_update",
+    "description": "Update a billing provider",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Provider UUID"
+        },
+        "name": {
+          "description": "New name",
+          "type": "string"
+        },
+        "faviconLink": {
+          "description": "New favicon URL",
+          "type": "string"
+        },
+        "loginUrl": {
+          "description": "New login page URL",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "billing_provider_delete",
+    "description": "Delete a billing provider",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Provider UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "billing_node_create",
+    "description": "Create a billing node",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "nodeUuid": {
+          "type": "string",
+          "description": "Node UUID"
+        },
+        "providerUuid": {
+          "type": "string",
+          "description": "Provider UUID"
+        },
+        "name": {
+          "description": "Billing node name",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nextBillingAt": {
+          "description": "Next billing date (ISO 8601)",
+          "type": "string"
+        }
+      },
+      "required": [
+        "nodeUuid",
+        "providerUuid"
+      ]
+    }
+  },
+  {
+    "name": "billing_node_update",
+    "description": "Update a billing node",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of billing node UUIDs"
+        },
+        "nextBillingAt": {
+          "type": "string",
+          "description": "New next billing date (ISO 8601)"
+        }
+      },
+      "required": [
+        "uuids",
+        "nextBillingAt"
+      ]
+    }
+  },
+  {
+    "name": "billing_node_delete",
+    "description": "Delete a billing node",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Billing node UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "billing_history_create",
+    "description": "Create a billing history entry",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "providerUuid": {
+          "type": "string",
+          "description": "Provider UUID"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount"
+        },
+        "billedAt": {
+          "type": "string",
+          "description": "Billing date (ISO 8601)"
+        }
+      },
+      "required": [
+        "providerUuid",
+        "amount",
+        "billedAt"
+      ]
+    }
+  },
+  {
+    "name": "billing_history_delete",
+    "description": "Delete a billing history entry",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "History entry UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "snippets_list",
+    "description": "List all configuration snippets",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "snippets_create",
+    "description": "Create a new configuration snippet",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Snippet name"
+        },
+        "snippet": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": {}
+          },
+          "description": "Snippet content as array of objects"
+        }
+      },
+      "required": [
+        "name",
+        "snippet"
+      ]
+    }
+  },
+  {
+    "name": "snippets_update",
+    "description": "Update an existing snippet",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Snippet name (identifies the snippet to update)"
+        },
+        "snippet": {
+          "default": [],
+          "description": "New snippet content as array of objects",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": {}
+          }
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+  },
+  {
+    "name": "snippets_sync",
+    "description": "Sync a snippet to all config profiles referencing it (restarts affected nodes)",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Snippet name to sync"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+  },
+  {
+    "name": "snippets_delete",
+    "description": "Delete a snippet by name",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Snippet name to delete"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+  },
+  {
+    "name": "external_squads_list",
+    "description": "List all external squads",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "external_squads_get",
+    "description": "Get an external squad by UUID",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Squad UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "external_squads_create",
+    "description": "Create a new external squad",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Squad name"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+  },
+  {
+    "name": "external_squads_update",
+    "description": "Update an external squad",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Squad UUID"
+        },
+        "name": {
+          "description": "New squad name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "external_squads_delete",
+    "description": "Delete an external squad",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Squad UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "external_squads_add_all_users",
+    "description": "Add EVERY user on the panel to an external squad",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "squadUuid": {
+          "type": "string",
+          "description": "Squad UUID"
+        }
+      },
+      "required": [
+        "squadUuid"
+      ]
+    }
+  },
+  {
+    "name": "external_squads_remove_all_users",
+    "description": "Remove EVERY user from an external squad",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "squadUuid": {
+          "type": "string",
+          "description": "Squad UUID"
+        }
+      },
+      "required": [
+        "squadUuid"
+      ]
+    }
+  },
+  {
+    "name": "external_squads_reorder",
+    "description": "Reorder external squads",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "viewPosition": {
+                "type": "number",
+                "description": "Sort position (0-based)"
+              },
+              "uuid": {
+                "type": "string",
+                "description": "Squad UUID"
+              }
+            },
+            "required": [
+              "viewPosition",
+              "uuid"
+            ]
+          },
+          "description": "Ordered array of { viewPosition, uuid } objects"
+        }
+      },
+      "required": [
+        "items"
+      ]
+    }
+  },
+  {
+    "name": "settings_get",
+    "description": "Get Remnawave panel settings",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "settings_update",
+    "description": "Update Remnawave panel settings",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "settings": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {},
+          "description": "Settings key-value pairs to update"
+        }
+      },
+      "required": [
+        "settings"
+      ]
+    }
+  },
+  {
+    "name": "sub_page_configs_list",
+    "description": "List all subscription page configurations",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "sub_page_configs_get",
+    "description": "Get a subscription page config by UUID",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Config UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "sub_page_configs_create",
+    "description": "Create a subscription page configuration",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Config name"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+  },
+  {
+    "name": "sub_page_configs_update",
+    "description": "Update a subscription page configuration",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Config UUID"
+        },
+        "name": {
+          "description": "New name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "sub_page_configs_delete",
+    "description": "Delete a subscription page configuration",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Config UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "sub_page_configs_reorder",
+    "description": "Reorder subscription page configurations",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "viewPosition": {
+                "type": "number",
+                "description": "Sort position (0-based)"
+              },
+              "uuid": {
+                "type": "string",
+                "description": "Config UUID"
+              }
+            },
+            "required": [
+              "viewPosition",
+              "uuid"
+            ]
+          },
+          "description": "Ordered array of { viewPosition, uuid } objects"
+        }
+      },
+      "required": [
+        "items"
+      ]
+    }
+  },
+  {
+    "name": "sub_page_configs_clone",
+    "description": "Clone a subscription page configuration",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "cloneFromUuid": {
+          "type": "string",
+          "description": "Config UUID to clone"
+        }
+      },
+      "required": [
+        "cloneFromUuid"
+      ]
+    }
+  },
+  {
+    "name": "node_plugins_list",
+    "description": "List all node plugins",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "node_plugins_get",
+    "description": "Get a node plugin by UUID",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Plugin UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "node_plugins_shared_lists_list",
+    "description": "List all node plugin shared lists",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "node_plugins_shared_lists_get",
+    "description": "Get a shared list by UUID",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Shared list UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "node_plugins_torrent_reports",
+    "description": "Get torrent blocker reports",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "node_plugins_torrent_stats",
+    "description": "Get torrent blocker statistics",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "node_plugins_create",
+    "description": "Create a new node plugin",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Plugin name"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+  },
+  {
+    "name": "node_plugins_update",
+    "description": "Update a node plugin",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Plugin UUID"
+        },
+        "name": {
+          "description": "New name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "node_plugins_delete",
+    "description": "Delete a node plugin",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Plugin UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "node_plugins_reorder",
+    "description": "Reorder node plugins",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "viewPosition": {
+                "type": "number",
+                "description": "Sort position (0-based)"
+              },
+              "uuid": {
+                "type": "string",
+                "description": "Plugin UUID"
+              }
+            },
+            "required": [
+              "viewPosition",
+              "uuid"
+            ]
+          },
+          "description": "Ordered array of { viewPosition, uuid } objects"
+        }
+      },
+      "required": [
+        "items"
+      ]
+    }
+  },
+  {
+    "name": "node_plugins_clone",
+    "description": "Clone a node plugin",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "cloneFromUuid": {
+          "type": "string",
+          "description": "Plugin UUID to clone"
+        }
+      },
+      "required": [
+        "cloneFromUuid"
+      ]
+    }
+  },
+  {
+    "name": "node_plugins_execute",
+    "description": "Execute a node plugin with a command on target nodes",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "command": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string",
+                  "const": "blockIps"
+                },
+                "ips": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "ip": {
+                        "type": "string",
+                        "description": "IP address to block"
+                      },
+                      "timeout": {
+                        "type": "number",
+                        "description": "Block timeout in seconds"
+                      }
+                    },
+                    "required": [
+                      "ip",
+                      "timeout"
+                    ]
+                  },
+                  "description": "Array of IP addresses with timeouts"
+                }
+              },
+              "required": [
+                "command",
+                "ips"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string",
+                  "const": "unblockIps"
+                },
+                "ips": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Array of IP addresses to unblock"
+                }
+              },
+              "required": [
+                "command",
+                "ips"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string",
+                  "const": "recreateTables"
+                }
+              },
+              "required": [
+                "command"
+              ]
+            }
+          ],
+          "description": "Command to execute"
+        },
+        "targetNodes": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string",
+                  "const": "allNodes"
+                }
+              },
+              "required": [
+                "target"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string",
+                  "const": "specificNodes"
+                },
+                "nodeUuids": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Array of node UUIDs"
+                }
+              },
+              "required": [
+                "target",
+                "nodeUuids"
+              ]
+            }
+          ],
+          "description": "Which nodes to target"
+        }
+      },
+      "required": [
+        "command",
+        "targetNodes"
+      ]
+    }
+  },
+  {
+    "name": "node_plugins_sync",
+    "description": "Push a plugin config, including its shared lists, to every node it is active on",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Plugin UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "node_plugins_shared_lists_create",
+    "description": "Create a node plugin shared list",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Shared list name"
+        },
+        "config": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {},
+          "description": "Shared list config key-value pairs"
+        }
+      },
+      "required": [
+        "name",
+        "config"
+      ]
+    }
+  },
+  {
+    "name": "node_plugins_shared_lists_update",
+    "description": "Update a node plugin shared list",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Shared list name (identifies the list to update)"
+        },
+        "config": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {},
+          "description": "New config key-value pairs"
+        }
+      },
+      "required": [
+        "name",
+        "config"
+      ]
+    }
+  },
+  {
+    "name": "node_plugins_shared_lists_delete",
+    "description": "Delete a node plugin shared list",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Shared list UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "node_plugins_shared_lists_sync",
+    "description": "Push every plugin referencing this shared list to the nodes it is active on",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Shared list name"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+  },
+  {
+    "name": "node_plugins_torrent_truncate",
+    "description": "Truncate all torrent blocker reports",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "connections_by_user",
+    "description": "Request active connections for a user (async job)",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        }
+      },
+      "required": [
+        "userId"
+      ]
+    }
+  },
+  {
+    "name": "connections_by_user_result",
+    "description": "Get result of a by-user connections job",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string",
+          "description": "Job ID from connections_by_user"
+        }
+      },
+      "required": [
+        "jobId"
+      ]
+    }
+  },
+  {
+    "name": "connections_by_node",
+    "description": "Request active connections for all users on a node (async job)",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "nodeUuid": {
+          "type": "string",
+          "description": "Node UUID"
+        }
+      },
+      "required": [
+        "nodeUuid"
+      ]
+    }
+  },
+  {
+    "name": "connections_by_node_result",
+    "description": "Get result of a by-node connections job",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string",
+          "description": "Job ID from connections_by_node"
+        }
+      },
+      "required": [
+        "jobId"
+      ]
+    }
+  },
+  {
+    "name": "connections_geocheck_by_node",
+    "description": "Run a geolocation check for a node (async job)",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "nodeUuid": {
+          "type": "string",
+          "description": "Node UUID"
+        }
+      },
+      "required": [
+        "nodeUuid"
+      ]
+    }
+  },
+  {
+    "name": "connections_geocheck_by_node_result",
+    "description": "Get result of a node geolocation check job",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string",
+          "description": "Job ID from connections_geocheck_by_node"
+        }
+      },
+      "required": [
+        "jobId"
+      ]
+    }
+  },
+  {
+    "name": "connections_drop",
+    "description": "Drop active connections by IP or user ID on specific/all nodes",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "dropBy": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "ipAddresses"
+                },
+                "ipAddresses": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Array of IP addresses"
+                }
+              },
+              "required": [
+                "by",
+                "ipAddresses"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "userIds"
+                },
+                "userIds": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "description": "Array of user IDs"
+                }
+              },
+              "required": [
+                "by",
+                "userIds"
+              ]
+            }
+          ],
+          "description": "What to drop connections by"
+        },
+        "targetNodes": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string",
+                  "const": "allNodes"
+                }
+              },
+              "required": [
+                "target"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string",
+                  "const": "specificNodes"
+                },
+                "nodeUuids": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Array of node UUIDs"
+                }
+              },
+              "required": [
+                "target",
+                "nodeUuids"
+              ]
+            }
+          ],
+          "description": "Which nodes to target"
+        }
+      },
+      "required": [
+        "dropBy",
+        "targetNodes"
+      ]
+    }
+  },
+  {
+    "name": "bandwidth_nodes_list",
+    "description": "Get bandwidth usage per node",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string",
+          "description": "Start date (YYYY-MM-DD)"
+        },
+        "end": {
+          "type": "string",
+          "description": "End date (YYYY-MM-DD)"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ]
+    }
+  },
+  {
+    "name": "bandwidth_nodes_realtime",
+    "description": "Get realtime bandwidth usage per node",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "bandwidth_user_usage",
+    "description": "Get bandwidth usage for a single user",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        },
+        "start": {
+          "type": "string",
+          "description": "Start date (YYYY-MM-DD)"
+        },
+        "end": {
+          "type": "string",
+          "description": "End date (YYYY-MM-DD)"
+        }
+      },
+      "required": [
+        "userId",
+        "start",
+        "end"
+      ]
+    }
+  },
+  {
+    "name": "bandwidth_nodes_usage",
+    "description": "List users exceeding a traffic threshold on the given nodes over a period",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "nodesUuids": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Node UUIDs to include"
+        },
+        "start": {
+          "type": "string",
+          "description": "Start date (YYYY-MM-DD)"
+        },
+        "end": {
+          "type": "string",
+          "description": "End date (YYYY-MM-DD)"
+        },
+        "minTotalBytes": {
+          "description": "Only include users whose total usage over the period is >= this (bytes)",
+          "type": "number"
+        }
+      },
+      "required": [
+        "nodesUuids",
+        "start",
+        "end"
+      ]
+    }
+  },
+  {
+    "name": "bandwidth_squad_usage",
+    "description": "Get traffic usage of an internal squad users over a period",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "squadUuid": {
+          "type": "string",
+          "description": "Internal squad UUID"
+        },
+        "start": {
+          "type": "string",
+          "description": "Start date (YYYY-MM-DD)"
+        },
+        "end": {
+          "type": "string",
+          "description": "End date (YYYY-MM-DD)"
+        },
+        "minTotalBytes": {
+          "description": "Minimum total usage in bytes",
+          "type": "number"
+        },
+        "limit": {
+          "description": "Number of users to return (max 1000)",
+          "type": "number"
+        },
+        "cursor": {
+          "description": "Pagination cursor",
+          "type": "number"
+        }
+      },
+      "required": [
+        "squadUuid",
+        "start",
+        "end"
+      ]
+    }
+  },
+  {
+    "name": "bandwidth_squad_user_usage",
+    "description": "Get daily traffic usage of a single user on internal squad nodes over a period",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "squadUuid": {
+          "type": "string",
+          "description": "Internal squad UUID"
+        },
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        },
+        "start": {
+          "type": "string",
+          "description": "Start date (YYYY-MM-DD)"
+        },
+        "end": {
+          "type": "string",
+          "description": "End date (YYYY-MM-DD)"
+        }
+      },
+      "required": [
+        "squadUuid",
+        "userId",
+        "start",
+        "end"
+      ]
+    }
+  },
+  {
+    "name": "node_integrations_list",
+    "description": "List all node integrations",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "node_integrations_get",
+    "description": "Get a node integration by UUID",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Integration UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "node_integrations_create",
+    "description": "Create a node integration",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Integration name (2-30 characters)"
+        },
+        "description": {
+          "description": "Integration description",
+          "type": "string"
+        },
+        "config": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {},
+          "description": "Integration config key-value pairs"
+        }
+      },
+      "required": [
+        "name",
+        "config"
+      ]
+    }
+  },
+  {
+    "name": "node_integrations_update",
+    "description": "Update a node integration",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Integration UUID"
+        },
+        "name": {
+          "description": "New name",
+          "type": "string"
+        },
+        "description": {
+          "description": "New description",
+          "type": "string"
+        },
+        "config": {
+          "description": "New config key-value pairs",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {}
+        },
+        "restartNodes": {
+          "description": "Restart affected nodes after the update",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "node_integrations_delete",
+    "description": "Delete a node integration",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Integration UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "metadata_node_get",
+    "description": "Get metadata for a specific node",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Node UUID"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    }
+  },
+  {
+    "name": "metadata_user_get",
+    "description": "Get metadata for a specific user",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        }
+      },
+      "required": [
+        "userId"
+      ]
+    }
+  },
+  {
+    "name": "metadata_node_upsert",
+    "description": "Create or update metadata for a node",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Node UUID"
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {},
+          "description": "Metadata key-value pairs"
+        }
+      },
+      "required": [
+        "uuid",
+        "metadata"
+      ]
+    }
+  },
+  {
+    "name": "metadata_user_upsert",
+    "description": "Create or update metadata for a user",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "number",
+          "description": "User ID"
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {},
+          "description": "Metadata key-value pairs"
+        }
+      },
+      "required": [
+        "userId",
+        "metadata"
+      ]
+    }
+  }
+]

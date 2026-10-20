@@ -17,23 +17,22 @@ MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing
 - **180 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, node integrations, shared lists, connections, bandwidth stats, and metadata
 - **4 resources** — real-time panel stats, node status, health checks, user details
 - **5 prompts** — guided workflows for common tasks
-- **Support mode (default)** — restrict to 16 user-facing tools with credentials stripped, for support bots
+- **Support mode (default)** — restrict to 17 user-facing tools with credentials stripped, for support bots
 - **Caddy support** — `X-Api-Key` header for panels behind Caddy with custom path
-- **Type-safe** — built on [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) for API route validation
+- **Native Go** — official [MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk), exact input schemas and panel routes preserved from backend-contract 3.4.2
 - **stdio transport** — works with Claude Desktop, Cursor, Windsurf, and any MCP-compatible client
 
 ### Requirements
 
-- Node.js >= 22
+- Go >= 1.27 (build only; the compiled binary has no runtime dependencies)
 - Remnawave panel with API token (Settings > API Tokens)
 
 ### Installation
 
 ```bash
-git clone https://github.com/TrackLine/mcp-remnawave.git
+git clone https://github.com/mitetenov/mcp-remnawave.git
 cd mcp-remnawave
-npm install
-npm run build
+go build -trimpath -o bin/remnawave-mcp ./cmd/remnawave-mcp
 ```
 
 ### Configuration
@@ -68,7 +67,7 @@ The `X-Api-Key` header will be added to every request automatically.
 
 The server runs in one of two modes.
 
-**Support mode is the default.** It exposes 16 user-facing tools, 1 resource and
+**Support mode is the default.** It exposes 17 user-facing tools, 1 resource and
 1 prompt, and redacts two groups of fields from every panel response.
 
 *Credentials:* `trojanPassword`, `ssPassword`, `vlessUuid`, `links` and
@@ -122,8 +121,8 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
 {
   "mcpServers": {
     "remnawave": {
-      "command": "node",
-      "args": ["/absolute/path/to/remnawave-mcp/dist/index.js"],
+      "command": "/absolute/path/to/mcp-remnawave/bin/remnawave-mcp",
+      "args": ["stdio"],
       "env": {
         "REMNAWAVE_BASE_URL": "https://vpn.example.com",
         "REMNAWAVE_API_TOKEN": "your-api-token-here",
@@ -143,8 +142,8 @@ Add to `.cursor/mcp.json` or `.windsurf/mcp.json` in your project:
 {
   "mcpServers": {
     "remnawave": {
-      "command": "node",
-      "args": ["/absolute/path/to/remnawave-mcp/dist/index.js"],
+      "command": "/absolute/path/to/mcp-remnawave/bin/remnawave-mcp",
+      "args": ["stdio"],
       "env": {
         "REMNAWAVE_BASE_URL": "https://vpn.example.com",
         "REMNAWAVE_API_TOKEN": "your-api-token-here",
@@ -159,15 +158,13 @@ Add to `.cursor/mcp.json` or `.windsurf/mcp.json` in your project:
 ### Docker
 
 ```bash
-npm run build
-docker compose up -d
+docker compose up -d --build
 ```
 
 Environment variables are passed via `.env` file or `docker-compose.yml`.
 
 The container serves both MCP protocol eras on the same `/` endpoint on port
-3100, built on TypeScript MCP SDK packages `@modelcontextprotocol/server` and
-`@modelcontextprotocol/node` at `2.0.0`. Clients negotiating the modern
+3100, built on the official MCP Go SDK 1.7.0. Clients negotiating the modern
 `2026-07-28` protocol version get fully stateless handling: no
 `Mcp-Session-Id` is ever issued or required, and each request is independent.
 Clients on protocol version `2025-11-25` or earlier keep the sessionful
@@ -177,10 +174,53 @@ session's SSE stream, and `DELETE /` terminates that session without
 affecting other clients. `GET /health` still answers `200 {"status":"ok"}`
 for container liveness.
 
+
+### Go commands and local verification
+
+```bash
+go build -trimpath -o bin/remnawave-mcp ./cmd/remnawave-mcp
+./bin/remnawave-mcp stdio  # default when no command is given
+./bin/remnawave-mcp http   # HTTP container default
+./bin/remnawave-mcp healthcheck
+./bin/remnawave-mcp version
+go vet ./...
+go test -race ./...
+```
+
+`MCP_HTTP_HOST` defaults to `0.0.0.0`; `MCP_HTTP_PORT` defaults to `3100`.
+`healthcheck` uses `http://localhost:${MCP_HTTP_PORT:-3100}/health`, accepts an
+optional URL argument, and returns nonzero on HTTP failure. The production
+image runs `/app/remnawave-mcp http` from `scratch`, with a statically linked Go
+binary, CA bundle, the existing `appuser` (UID 100 / GID 101), and a writable
+`/tmp` (mode 1777). It includes no shell, package manager, Node.js, or Python.
+Use `/app/remnawave-mcp healthcheck` for probes; shell-based probes do not work. The Docker Hub image remains
+`mitetenov/remnawave-mcp` (`latest`, `v<VERSION>` and commit SHA tags).
+
+Docker builds copy `go.mod` / `go.sum` before application sources. A BuildKit
+module cache accelerates dependency changes; downloaded dependencies are also
+materialized into a normal layer so an imported CI layer cache works even when
+cache mounts are empty. Compilation runs without network access and uses a
+separate local compiler cache. Both CI image jobs export/import GHA layer caches
+with `mode=max`; cache-mount contents themselves are not exported. The production
+context includes only the build file, module files, CLI entrypoint, and runtime
+Go/JSON files. Tests, fixtures, docs, local binaries, and secrets are excluded.
+
+The binary reads exported environment variables; it does not load `.env`
+automatically. Docker Compose expands `.env`. For a direct shell launch,
+export the documented variables first. The upstream client does not retry,
+cache, unwrap panel response envelopes, or exhaust cursor pagination. It
+preserves the original single-request behavior and configured timeout.
+
+All 180 tool schemas and request mappings remain reviewable in source. The
+committed golden fixtures were captured from the original committed Node
+implementation before the migration, with fake credentials and responses.
+Tests use isolated local HTTP servers and never call a production panel.
+Historical documents under `docs/superpowers/` describe the earlier
+TypeScript implementation and are retained as design history.
+
 ### Upgrading to 3.3.0
 
-This release changes only how the HTTP transport is served internally —
-tool behavior, the `/` endpoint, and `/health` are unchanged. Because the
+The Go migration preserves tool behavior, the `/` endpoint, and `/health`. Because the
 legacy sessionful era (`2025-11-25` and earlier) is still fully served
 alongside the new stateless `2026-07-28` era, an old supportBot client that
 hasn't been updated keeps working unmodified against a 3.3.0 server during a
@@ -191,7 +231,7 @@ needed.
 
 ### Available Tools
 
-#### Users (26 tools)
+#### Users (27 tools)
 
 Users are addressed by their numeric `userId` — the panel dropped user UUIDs in 3.x.
 
@@ -511,41 +551,21 @@ Replaces the `ip_control_*` tools removed in Remnawave 3.x.
 ### Project Structure
 
 ```
-src/
-├── index.ts                       # Entry point (stdio transport)
-├── http-index.ts                  # Entry point (HTTP transport)
-├── http-handler.ts                # HTTP routing: MCP endpoint + /health
-├── server.ts                      # McpServer setup
-├── config.ts                      # Environment config
-├── client/
-│   └── index.ts                   # Remnawave HTTP client
-├── tools/
-│   ├── helpers.ts                 # Result formatting helpers
-│   ├── index.ts                   # Tool registration
-│   ├── users.ts                   # User management (26 tools)
-│   ├── node-plugins.ts            # Node plugins & shared lists (18 tools)
-│   ├── nodes.ts                   # Node management (15 tools)
-│   ├── system.ts                  # System & auth (13 tools)
-│   ├── infra-billing.ts           # Infrastructure billing (12 tools)
-│   ├── hosts.ts                   # Host management (11 tools)
-│   ├── subscriptions.ts           # Subscriptions (10 tools)
-│   ├── inbounds.ts                # Config profiles & inbounds (9 tools)
-│   ├── squads.ts                  # Internal squads (9 tools)
-│   ├── external-squads.ts         # External squads (8 tools)
-│   ├── connections.ts             # Connections & geocheck (7 tools)
-│   ├── hwid.ts                    # HWID devices (7 tools)
-│   ├── subscription-page-configs.ts # Subscription page configs (7 tools)
-│   ├── bandwidth.ts               # Bandwidth stats (6 tools)
-│   ├── node-integrations.ts       # Node integrations (5 tools)
-│   ├── snippets.ts                # Snippets (5 tools)
-│   ├── api-tokens.ts              # API tokens (4 tools)
-│   ├── metadata.ts                # Node & user metadata (4 tools)
-│   ├── settings.ts                # Panel settings (2 tools)
-│   └── keygen.ts                  # Keygen (1 tool)
-├── resources/
-│   └── index.ts                   # MCP resources
-└── prompts/
-    └── index.ts                   # MCP prompts
+cmd/remnawave-mcp/main.go      # stdio, HTTP and healthcheck commands
+internal/remnawave/
+  server.go                    # registrations, input validation, support boundary
+  tools.json                   # exact public tool names/descriptions/schemas
+  features.json                # resource and prompt descriptors
+  support-hwid.json            # Telegram-scoped support HWID input contracts
+  support_hwid.go              # ownership checks and current device snapshots
+  tools.go           # native Go tool request/response mappings
+  routes.go          # native Go panel method/path/body mappings
+  prompts.go         # exact prompt content
+  runtime.go                   # config, HTTP API client, recursive redaction
+  compatibility.go             # protocol-era wire compatibility
+  http.go                      # Host/Origin checks and session lifecycle
+  *_test.go                    # native protocol and behavioral tests
+  testdata/legacy-golden.json   # original implementation request/result oracle
 ```
 
 ### License
@@ -567,23 +587,22 @@ MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), п
 - **180 инструментов** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, интеграциями нод, общими списками, соединениями, статистикой трафика и метаданными
 - **4 ресурса** — статистика панели, статус нод, проверка здоровья, данные пользователя в реальном времени
 - **5 промптов** — пошаговые сценарии для типичных задач
-- **Режим support (по умолчанию)** — 16 пользовательских инструментов с вырезанными кредами, для саппорт-ботов
+- **Режим support (по умолчанию)** — 17 пользовательских инструментов с вырезанными кредами, для саппорт-ботов
 - **Поддержка Caddy** — заголовок `X-Api-Key` для панелей за Caddy с кастомным путём
-- **Type-safe** — построен на [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) для валидации API-маршрутов
+- **Go** — официальный [MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk); входные схемы и маршруты API сохранены из backend-contract 3.4.2
 - **stdio транспорт** — работает с Claude Desktop, Cursor, Windsurf и любым MCP-совместимым клиентом
 
 ### Требования
 
-- Node.js >= 22
+- Go >= 1.27 (build only; the compiled binary has no runtime dependencies)
 - Remnawave панель с API-токеном (Настройки > API Tokens)
 
 ### Установка
 
 ```bash
-git clone https://github.com/TrackLine/mcp-remnawave.git
+git clone https://github.com/mitetenov/mcp-remnawave.git
 cd mcp-remnawave
-npm install
-npm run build
+go build -trimpath -o bin/remnawave-mcp ./cmd/remnawave-mcp
 ```
 
 ### Конфигурация
@@ -618,7 +637,7 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 
 Сервер работает в одном из двух режимов.
 
-**Support — режим по умолчанию.** Открыто 16 пользовательских инструментов,
+**Support — режим по умолчанию.** Открыто 17 пользовательских инструментов,
 1 ресурс и 1 промпт, а из каждого ответа панели вырезаются две группы полей.
 
 *Учётные данные:* `trojanPassword`, `ssPassword`, `vlessUuid`, `links` и
@@ -673,8 +692,8 @@ Telegram ID и возвращает актуальный снимок устро
 {
   "mcpServers": {
     "remnawave": {
-      "command": "node",
-      "args": ["/абсолютный/путь/к/remnawave-mcp/dist/index.js"],
+      "command": "/абсолютный/путь/к/mcp-remnawave/bin/remnawave-mcp",
+      "args": ["stdio"],
       "env": {
         "REMNAWAVE_BASE_URL": "https://vpn.example.com",
         "REMNAWAVE_API_TOKEN": "ваш-api-токен",
@@ -694,8 +713,8 @@ Telegram ID и возвращает актуальный снимок устро
 {
   "mcpServers": {
     "remnawave": {
-      "command": "node",
-      "args": ["/абсолютный/путь/к/remnawave-mcp/dist/index.js"],
+      "command": "/абсолютный/путь/к/mcp-remnawave/bin/remnawave-mcp",
+      "args": ["stdio"],
       "env": {
         "REMNAWAVE_BASE_URL": "https://vpn.example.com",
         "REMNAWAVE_API_TOKEN": "ваш-api-токен",
@@ -710,15 +729,13 @@ Telegram ID и возвращает актуальный снимок устро
 ### Docker
 
 ```bash
-npm run build
-docker compose up -d
+docker compose up -d --build
 ```
 
 Переменные окружения передаются через `.env` файл или `docker-compose.yml`.
 
 Контейнер обслуживает обе эры протокола MCP на одном и том же эндпоинте `/`
-на порту 3100, на базе пакетов TypeScript MCP SDK `@modelcontextprotocol/server`
-и `@modelcontextprotocol/node` версии `2.0.0`. Клиенты, согласующие
+на порту 3100, на базе официального MCP Go SDK 1.7.0. Клиенты, согласующие
 современную версию протокола `2026-07-28`, получают полностью
 stateless-обработку: `Mcp-Session-Id` никогда не выдаётся и не требуется,
 каждый запрос независим. Клиенты на версии протокола `2025-11-25` и старше
@@ -731,8 +748,7 @@ stateless-обработку: `Mcp-Session-Id` никогда не выдаёт�
 
 ### Обновление до 3.3.0
 
-Этот релиз меняет только внутреннюю реализацию HTTP-транспорта — поведение
-инструментов, эндпоинт `/` и `/health` не изменились. Поскольку устаревшая
+Переход на Go сохраняет поведение инструментов, эндпоинт `/` и `/health`. Поскольку устаревшая
 sessionful-эра (`2025-11-25` и старше) по-прежнему полностью обслуживается
 наряду с новой stateless-эрой `2026-07-28`, старый клиент supportBot, который
 ещё не обновлён, продолжает работать без изменений с сервером версии 3.3.0
@@ -1063,41 +1079,21 @@ supportBot до поддержки современной эры он всё е�
 ### Структура проекта
 
 ```
-src/
-├── index.ts                       # Точка входа (stdio транспорт)
-├── http-index.ts                  # Точка входа (HTTP транспорт)
-├── http-handler.ts                # HTTP-роутинг: MCP-эндпоинт + /health
-├── server.ts                      # Настройка McpServer
-├── config.ts                      # Конфигурация окружения
-├── client/
-│   └── index.ts                   # HTTP-клиент Remnawave
-├── tools/
-│   ├── helpers.ts                 # Хелперы форматирования
-│   ├── index.ts                   # Регистрация инструментов
-│   ├── users.ts                   # Управление пользователями (26)
-│   ├── node-plugins.ts            # Плагины нод и общие списки (18)
-│   ├── nodes.ts                   # Управление нодами (15)
-│   ├── system.ts                  # Система и авторизация (13)
-│   ├── infra-billing.ts           # Биллинг инфраструктуры (12)
-│   ├── hosts.ts                   # Управление хостами (11)
-│   ├── subscriptions.ts           # Подписки (10)
-│   ├── inbounds.ts                # Конфиг-профили и inbounds (9)
-│   ├── squads.ts                  # Внутренние группы (9)
-│   ├── external-squads.ts         # Внешние группы (8)
-│   ├── connections.ts             # Соединения и геопроверка (7)
-│   ├── hwid.ts                    # HWID-устройства (7)
-│   ├── subscription-page-configs.ts # Страницы подписок (7)
-│   ├── bandwidth.ts               # Статистика трафика (6)
-│   ├── node-integrations.ts       # Интеграции нод (5)
-│   ├── snippets.ts                # Сниппеты (5)
-│   ├── api-tokens.ts              # API-токены (4)
-│   ├── metadata.ts                # Метаданные нод и пользователей (4)
-│   ├── settings.ts                # Настройки панели (2)
-│   └── keygen.ts                  # Keygen (1)
-├── resources/
-│   └── index.ts                   # MCP-ресурсы
-└── prompts/
-    └── index.ts                   # MCP-промпты
+cmd/remnawave-mcp/main.go      # stdio, HTTP and healthcheck commands
+internal/remnawave/
+  server.go                    # registrations, input validation, support boundary
+  tools.json                   # exact public tool names/descriptions/schemas
+  features.json                # resource and prompt descriptors
+  support-hwid.json            # Telegram-scoped support HWID input contracts
+  support_hwid.go              # ownership checks and current device snapshots
+  tools.go           # native Go tool request/response mappings
+  routes.go          # native Go panel method/path/body mappings
+  prompts.go         # exact prompt content
+  runtime.go                   # config, HTTP API client, recursive redaction
+  compatibility.go             # protocol-era wire compatibility
+  http.go                      # Host/Origin checks and session lifecycle
+  *_test.go                    # native protocol and behavioral tests
+  testdata/legacy-golden.json   # original implementation request/result oracle
 ```
 
 ### Лицензия
