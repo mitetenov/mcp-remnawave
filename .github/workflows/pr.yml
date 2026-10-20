@@ -1,40 +1,28 @@
 name: PR checks
-
-# The release workflow (ci.yml) runs only on push to main and never runs
-# tests — it builds, publishes a GitHub Release and pushes Docker images.
-# This workflow is the gate that runs before any of that happens.
-
 on:
   pull_request:
-    branches:
-      - main
-
+    branches: [main]
 permissions:
   contents: read
-
 jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7.0.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7.0.0
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v6
         with:
-          # Matches the `engines` floor in package.json and the runtime in
-          # the Dockerfile.
-          node-version: 22
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Typecheck
-        run: npx tsc --noEmit
-
-      - name: Test
-        run: npm test
-
-      - name: Build
-        run: npm run build
+          go-version-file: go.mod
+          cache: true
+      - name: Check Go formatting
+        run: test -z "$(gofmt -l cmd internal)"
+      - run: go vet ./...
+      - run: go test -race ./...
+      - run: go build -trimpath -o bin/remnawave-mcp ./cmd/remnawave-mcp
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7.3.0
+        with:
+          context: .
+          load: true
+          tags: remnawave-mcp:test
+          cache-from: type=gha,scope=remnawave-mcp
+          cache-to: type=gha,mode=max,scope=remnawave-mcp

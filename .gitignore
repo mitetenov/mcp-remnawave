@@ -22,3 +22,7 @@ Thumbs.db
 
 .claude/
 test-tools.mjs
+/bin/
+/remnawave-mcp
+*.test
+coverage*

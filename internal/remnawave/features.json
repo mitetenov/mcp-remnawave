@@ -1,0 +1,86 @@
+{
+  "resources": [
+    {
+      "uri": "remnawave://stats",
+      "name": "panel-stats",
+      "description": "Current Remnawave panel statistics (users, nodes, traffic, system)",
+      "mimeType": "application/json"
+    },
+    {
+      "uri": "remnawave://nodes",
+      "name": "panel-nodes",
+      "description": "Status of all Remnawave nodes (online/offline, traffic)",
+      "mimeType": "application/json"
+    },
+    {
+      "uri": "remnawave://health",
+      "name": "panel-health",
+      "description": "Remnawave panel health check",
+      "mimeType": "application/json"
+    }
+  ],
+  "resourceTemplates": [
+    {
+      "name": "user-details",
+      "uriTemplate": "remnawave://users/{userId}",
+      "description": "Detailed information about a specific Remnawave user",
+      "mimeType": "application/json"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "create_user_wizard",
+      "description": "Step-by-step guide to create a new VPN user",
+      "arguments": [
+        {
+          "name": "username",
+          "description": "Username for the new user",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "node_diagnostics",
+      "description": "Diagnose issues with a specific node",
+      "arguments": [
+        {
+          "name": "nodeUuid",
+          "description": "UUID of the node to diagnose",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "traffic_report",
+      "description": "Generate a traffic usage report",
+      "arguments": [
+        {
+          "name": "startDate",
+          "description": "Start date (ISO 8601)",
+          "required": false
+        },
+        {
+          "name": "endDate",
+          "description": "End date (ISO 8601)",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "user_audit",
+      "description": "Complete audit of a specific user",
+      "arguments": [
+        {
+          "name": "userId",
+          "description": "User ID to audit",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "bulk_user_cleanup",
+      "description": "Find and manage expired or inactive users",
+      "arguments": []
+    }
+  ]
+}
