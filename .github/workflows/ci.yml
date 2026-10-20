@@ -46,6 +46,7 @@ jobs:
       - uses: docker/build-push-action@v7.3.0
         with:
           context: .
+          platforms: linux/amd64
           push: true
           cache-from: type=gha,scope=remnawave-mcp
           cache-to: type=gha,mode=max,scope=remnawave-mcp
