@@ -245,7 +245,7 @@ func NewServer(config Config) *mcp.Server {
 			for _, a := range p.Arguments {
 				if a.Required {
 					if _, ok := args[a.Name]; !ok {
-						return nil, fmt.Errorf("Missing required argument: %s", a.Name)
+						return nil, fmt.Errorf("Missing required argument: %s", a.Name) //nolint:staticcheck // ST1005: preserve the existing client-facing MCP error contract.
 					}
 				}
 			}

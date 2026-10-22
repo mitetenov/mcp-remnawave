@@ -18,7 +18,7 @@ func responseRecord(value any) (any, error) {
 	case map[string]any, []any:
 		return response, nil
 	default:
-		return nil, errors.New("Remnawave API returned an invalid response")
+		return nil, errors.New("Remnawave API returned an invalid response") //nolint:staticcheck // ST1005: preserve the existing client-facing MCP error contract.
 	}
 }
 
@@ -29,7 +29,7 @@ func extractSupportUsers(value any) ([]supportAccount, error) {
 	}
 	users, ok := get(response, "users").([]any)
 	if !ok {
-		return nil, errors.New("Remnawave API returned an invalid users response")
+		return nil, errors.New("Remnawave API returned an invalid users response") //nolint:staticcheck // ST1005: preserve the existing client-facing MCP error contract.
 	}
 	accounts := make([]supportAccount, 0, len(users))
 	for _, user := range users {
@@ -53,7 +53,7 @@ func extractSupportDevices(value any) ([]any, error) {
 	}
 	devices, ok := get(response, "devices").([]any)
 	if !ok {
-		return nil, errors.New("Remnawave API returned an invalid HWID response")
+		return nil, errors.New("Remnawave API returned an invalid HWID response") //nolint:staticcheck // ST1005: preserve the existing client-facing MCP error contract.
 	}
 	valid := make([]any, 0, len(devices))
 	for _, device := range devices {

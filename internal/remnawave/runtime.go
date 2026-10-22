@@ -235,7 +235,7 @@ func (e *executor) request(method string, values ...any) any {
 		return nil
 	}
 	if e.config.BaseURL == "" || e.config.APIToken == "" {
-		e.err = errors.New("MCP server is not configured. Set REMNAWAVE_BASE_URL and REMNAWAVE_API_TOKEN environment variables.")
+		e.err = errors.New("MCP server is not configured. Set REMNAWAVE_BASE_URL and REMNAWAVE_API_TOKEN environment variables.") //nolint:staticcheck // ST1005: preserve the existing client-facing MCP error contract.
 		return nil
 	}
 	p := str(values[0])
@@ -271,7 +271,7 @@ func (e *executor) request(method string, values ...any) any {
 	res, err := client.Do(req)
 	if err != nil {
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			e.err = fmt.Errorf("Remnawave API timeout: %s %s did not respond within %sms", method, p, str(float64(timeout)/float64(time.Millisecond)))
+			e.err = fmt.Errorf("Remnawave API timeout: %s %s did not respond within %sms", method, p, str(float64(timeout)/float64(time.Millisecond))) //nolint:staticcheck // ST1005: preserve the existing client-facing MCP error contract.
 		} else {
 			e.err = errors.New("fetch failed")
 		}
@@ -297,7 +297,7 @@ func (e *executor) request(method string, values ...any) any {
 		} else {
 			msg = fmt.Sprintf("HTTP %d %s", res.StatusCode, http.StatusText(res.StatusCode))
 		}
-		e.err = fmt.Errorf("Remnawave API error: %s", msg)
+		e.err = fmt.Errorf("Remnawave API error: %s", msg) //nolint:staticcheck // ST1005: preserve the existing client-facing MCP error contract.
 		return nil
 	}
 	if parseErr != nil {
@@ -315,12 +315,12 @@ func (e *executor) request(method string, values ...any) any {
 func invalidJSONError(b []byte, parseErr error) error {
 	trimmed := strings.TrimSpace(string(b))
 	if trimmed == "" {
-		return errors.New("Unexpected end of JSON input")
+		return errors.New("Unexpected end of JSON input") //nolint:staticcheck // ST1005: preserve the existing client-facing MCP error contract.
 	}
 	var syntax *json.SyntaxError
 	if errors.As(parseErr, &syntax) && syntax.Offset > 0 && int(syntax.Offset) <= len(b) && !strings.HasPrefix(trimmed, "{") && !strings.HasPrefix(trimmed, "[") {
 		token := string(b[syntax.Offset-1])
-		return fmt.Errorf("Unexpected token '%s', %q is not valid JSON", token, trimmed)
+		return fmt.Errorf("Unexpected token '%s', %q is not valid JSON", token, trimmed) //nolint:staticcheck // ST1005: preserve the existing client-facing MCP error contract.
 	}
-	return fmt.Errorf("Unexpected token in JSON response: %w", parseErr)
+	return fmt.Errorf("Unexpected token in JSON response: %w", parseErr) //nolint:staticcheck // ST1005: preserve the existing client-facing MCP error contract.
 }

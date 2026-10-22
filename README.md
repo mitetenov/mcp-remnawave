@@ -1099,3 +1099,7 @@ internal/remnawave/
 ### Лицензия
 
 MIT
+
+## Go maintenance checks
+
+Go 1.27.3 is the shared toolchain. CI verifies tidy modules, downloaded module checksums, formatting, vet, golangci-lint v2.15.0, unit/race tests, production binaries and the Docker build on Ubuntu 26.04. Actions use reviewed full commit pins; Dependabot checks Go, Actions and Docker weekly. The main workflow still packages the existing five OS/architecture binaries as `mcp-release.zip` using `VERSION`, then publishes the existing release/image tags only after validation. Subprocess tests and container runtime smoke are removed; isolated tests retain in-process fake HTTP transports. No signing or deployment is performed by PR checks.
