@@ -1,5 +1,6 @@
-# syntax=docker/dockerfile:1
-FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS build
+# syntax=docker/dockerfile:1.28.0
+FROM --platform=$BUILDPLATFORM golang:1.27.3-alpine3.24 AS build
+ENV GOTOOLCHAIN=local
 WORKDIR /src
 
 # Runtime files are independent of application sources and dependency changes.
