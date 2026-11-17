@@ -14,10 +14,10 @@ MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing
 
 ### Features
 
-- **180 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, node integrations, shared lists, connections, bandwidth stats, and metadata
+- **181 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, node integrations, shared lists, connections, bandwidth stats, and metadata
 - **4 resources** — real-time panel stats, node status, health checks, user details
 - **5 prompts** — guided workflows for common tasks
-- **Support mode (default)** — restrict to 17 user-facing tools with credentials stripped, for support bots
+- **Support mode (default)** — restrict to 18 user-facing tools with credentials stripped, for support bots
 - **Caddy support** — `X-Api-Key` header for panels behind Caddy with custom path
 - **Native Go** — official [MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk), exact input schemas and panel routes preserved from backend-contract 3.4.2
 - **stdio transport** — works with Claude Desktop, Cursor, Windsurf, and any MCP-compatible client
@@ -67,7 +67,7 @@ The `X-Api-Key` header will be added to every request automatically.
 
 The server runs in one of two modes.
 
-**Support mode is the default.** It exposes 17 user-facing tools, 1 resource and
+**Support mode is the default.** It exposes 18 user-facing tools, 1 resource and
 1 prompt, and redacts two groups of fields from every panel response.
 
 *Credentials:* `trojanPassword`, `ssPassword`, `vlessUuid`, `links` and
@@ -84,7 +84,7 @@ The only mutating operation is removing HWID devices, which is safe: a device
 re-registers on the next connect. Intended for support bots that act on behalf
 of an end user.
 
-**Full mode** has no restrictions: all 180 tools, 4 resources, 5 prompts, and
+**Full mode** has no restrictions: all 181 tools, 4 resources, 5 prompts, and
 untouched responses. Enable it with `REMNAWAVE_IS_SUPPORT=false`.
 
 The flag is parsed fail-closed — only the exact string `false` unlocks full
@@ -98,11 +98,17 @@ to all of its panel accounts and returns a current device snapshot grouped by
 snapshot, verifies ownership again, and treats a concurrent removal as
 `status: already_absent` instead of an MCP error.
 
+`users_get_torrent_block_by_telegram_id` searches Torrent Blocker reports for
+accounts linked to the Telegram ID. It returns `active` before the scheduled
+expiry, `recent` for 15 minutes after expiry, or `not_found`. A scoped panel
+token needs `users:stream` and `node-plugins:torrent-blocker-reports`.
+
 | Category | Tools |
 |----------|-------|
 | User lookup (6) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_subscription_url_by_telegram_id` |
 | Subscription (4) | `subscriptions_get_by_user_id`, `subscriptions_get_by_username`, `subscriptions_get_by_short_uuid`, `subscription_info` |
 | Access and usage (2) | `users_accessible_nodes`, `bandwidth_user_usage` |
+| Connection diagnostics (1) | `users_get_torrent_block_by_telegram_id` |
 | Devices (3) | `hwid_devices_list`, `hwid_device_delete`, `hwid_devices_delete_all` |
 | Server status (2) | `nodes_list`, `nodes_get` — infrastructure fields redacted |
 
@@ -211,7 +217,7 @@ export the documented variables first. The upstream client does not retry,
 cache, unwrap panel response envelopes, or exhaust cursor pagination. It
 preserves the original single-request behavior and configured timeout.
 
-All 180 tool schemas and request mappings remain reviewable in source. The
+All 181 tool schemas and request mappings remain reviewable in source. The
 committed golden fixtures were captured from the original committed Node
 implementation before the migration, with fake credentials and responses.
 Tests use isolated local HTTP servers and never call a production panel.
@@ -231,7 +237,7 @@ needed.
 
 ### Available Tools
 
-#### Users (27 tools)
+#### Users (28 tools)
 
 Users are addressed by their numeric `userId` — the panel dropped user UUIDs in 3.x.
 
@@ -243,6 +249,7 @@ Users are addressed by their numeric `userId` — the panel dropped user UUIDs i
 | `users_get_by_short_uuid` | Get user by short UUID | read |
 | `users_get_by_telegram_id` | Get users by Telegram ID (returns a list) | read |
 | `users_get_subscription_url_by_telegram_id` | Get the only unambiguous subscription URL for a Telegram user; return no URL for distinct matches | read |
+| `users_get_torrent_block_by_telegram_id` | Check for an active or recently expired Torrent Blocker report for linked accounts | read |
 | `users_accessible_nodes` | List nodes the user can connect to | read |
 | `users_tags_list` | List all user tags | read |
 | `users_resolve` | Resolve a user by ID, short UUID or username | read |
@@ -584,10 +591,10 @@ MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), п
 
 ### Возможности
 
-- **180 инструментов** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, интеграциями нод, общими списками, соединениями, статистикой трафика и метаданными
+- **181 инструмент** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, интеграциями нод, общими списками, соединениями, статистикой трафика и метаданными
 - **4 ресурса** — статистика панели, статус нод, проверка здоровья, данные пользователя в реальном времени
 - **5 промптов** — пошаговые сценарии для типичных задач
-- **Режим support (по умолчанию)** — 17 пользовательских инструментов с вырезанными кредами, для саппорт-ботов
+- **Режим support (по умолчанию)** — 18 пользовательских инструментов с вырезанными кредами, для саппорт-ботов
 - **Поддержка Caddy** — заголовок `X-Api-Key` для панелей за Caddy с кастомным путём
 - **Go** — официальный [MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk); входные схемы и маршруты API сохранены из backend-contract 3.4.2
 - **stdio транспорт** — работает с Claude Desktop, Cursor, Windsurf и любым MCP-совместимым клиентом
@@ -637,7 +644,7 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 
 Сервер работает в одном из двух режимов.
 
-**Support — режим по умолчанию.** Открыто 17 пользовательских инструментов,
+**Support — режим по умолчанию.** Открыто 18 пользовательских инструментов,
 1 ресурс и 1 промпт, а из каждого ответа панели вырезаются две группы полей.
 
 *Учётные данные:* `trojanPassword`, `ssPassword`, `vlessUuid`, `links` и
@@ -654,7 +661,7 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 устройство снова появится при следующем подключении. Режим рассчитан на
 саппорт-ботов, действующих от имени пользователя.
 
-**Full — без ограничений:** все 180 инструментов, 4 ресурса, 5 промптов,
+**Full — без ограничений:** доступен 181 инструмент, 4 ресурса, 5 промптов,
 ответы не трогаются. Включается через `REMNAWAVE_IS_SUPPORT=false`.
 
 Флаг разбирается fail-closed: полный режим включает только точная строка
@@ -669,11 +676,18 @@ Telegram ID и возвращает актуальный снимок устро
 повторно проверяет принадлежность аккаунта и сообщает о параллельном удалении
 как `status: already_absent`, а не как ошибку MCP.
 
+`users_get_torrent_block_by_telegram_id` ищет отчёты Torrent Blocker по
+аккаунтам, привязанным к Telegram ID. Возвращает `active` до расчётного
+окончания блокировки, `recent` в течение 15 минут после него или `not_found`.
+Токену с ограниченными правами нужны `users:stream` и
+`node-plugins:torrent-blocker-reports`.
+
 | Категория | Инструменты |
 |-----------|-------------|
 | Поиск пользователя (6) | `users_resolve`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_subscription_url_by_telegram_id` |
 | Подписка (4) | `subscriptions_get_by_user_id`, `subscriptions_get_by_username`, `subscriptions_get_by_short_uuid`, `subscription_info` |
 | Доступ и расход (2) | `users_accessible_nodes`, `bandwidth_user_usage` |
+| Диагностика подключения (1) | `users_get_torrent_block_by_telegram_id` |
 | Устройства (3) | `hwid_devices_list`, `hwid_device_delete`, `hwid_devices_delete_all` |
 | Статус серверов (2) | `nodes_list`, `nodes_get` — инфраструктурные поля вырезаны |
 
@@ -759,7 +773,7 @@ supportBot до поддержки современной эры он всё е�
 
 ### Доступные инструменты
 
-#### Пользователи (26 инструментов)
+#### Пользователи (28 инструментов)
 
 Пользователь адресуется числовым `userId` — в 3.x панель отказалась от UUID пользователей.
 
@@ -771,6 +785,7 @@ supportBot до поддержки современной эры он всё е�
 | `users_get_by_short_uuid` | Получить пользователя по short UUID | read |
 | `users_get_by_telegram_id` | Получить пользователей по Telegram ID (список) | read |
 | `users_get_subscription_url_by_telegram_id` | Получить единственный однозначный URL подписки по Telegram ID; при нескольких разных совпадениях URL не возвращается | read |
+| `users_get_torrent_block_by_telegram_id` | Проверить действующую или недавно завершившуюся блокировку Torrent Blocker по привязанным аккаунтам | read |
 | `users_accessible_nodes` | Ноды, доступные пользователю | read |
 | `users_tags_list` | Список тегов пользователей | read |
 | `users_resolve` | Найти пользователя по ID, short UUID или username | read |

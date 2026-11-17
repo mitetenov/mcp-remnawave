@@ -51,6 +51,8 @@ func runTool(e *executor, name string, args object) any {
 			vars["result"] = e.getUsersByTelegramId(vars["telegramId"])
 			return subscriptionURL(vars["result"])
 		}
+	case "users_get_torrent_block_by_telegram_id":
+		return e.getTorrentBlockByTelegramID(get(args, "telegramId"))
 	case "users_accessible_nodes":
 		{
 			vars["userId"] = get(args, "userId")

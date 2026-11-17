@@ -109,6 +109,23 @@
     }
   },
   {
+    "name": "users_get_torrent_block_by_telegram_id",
+    "description": "Check Torrent Blocker reports for the authenticated Telegram user's accounts. Returns active for a reported block before its scheduled expiry, recent for one that expired less than 15 minutes ago, or not_found.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "telegramId": {
+          "type": "number",
+          "description": "Authenticated Telegram user ID"
+        }
+      },
+      "required": [
+        "telegramId"
+      ]
+    }
+  },
+  {
     "name": "users_accessible_nodes",
     "description": "List nodes a Remnawave user can connect to",
     "inputSchema": {

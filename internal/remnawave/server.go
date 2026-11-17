@@ -27,7 +27,7 @@ type toolDefinition struct {
 	InputSchema object `json:"inputSchema"`
 }
 
-var supportTools = map[string]bool{"users_resolve": true, "users_get": true, "users_get_by_username": true, "users_get_by_short_uuid": true, "users_get_by_telegram_id": true, "users_get_subscription_url_by_telegram_id": true, "users_accessible_nodes": true, "subscriptions_get_by_user_id": true, "subscriptions_get_by_username": true, "subscriptions_get_by_short_uuid": true, "subscription_info": true, "bandwidth_user_usage": true, "hwid_devices_list": true, "hwid_device_delete": true, "hwid_devices_delete_all": true, "nodes_list": true, "nodes_get": true}
+var supportTools = map[string]bool{"users_resolve": true, "users_get": true, "users_get_by_username": true, "users_get_by_short_uuid": true, "users_get_by_telegram_id": true, "users_get_subscription_url_by_telegram_id": true, "users_get_torrent_block_by_telegram_id": true, "users_accessible_nodes": true, "subscriptions_get_by_user_id": true, "subscriptions_get_by_username": true, "subscriptions_get_by_short_uuid": true, "subscription_info": true, "bandwidth_user_usage": true, "hwid_devices_list": true, "hwid_device_delete": true, "hwid_devices_delete_all": true, "nodes_list": true, "nodes_get": true}
 
 // normalizeInput follows Zod's object semantics: apply defaults and strip unknown
 // object keys, while retaining catchall objects. Validation runs before any API call.
