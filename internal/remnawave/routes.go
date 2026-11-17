@@ -31,11 +31,13 @@ func (e *executor) getUserByShortUuid(args ...any) any {
 }
 
 func (e *executor) getUsersByTelegramId(args ...any) any {
-	vars := object{}
-	_ = vars
-	vars["telegramId"] = arg(args, 0, undef)
-	vars["size"] = arg(args, 1, 25)
-	return e.request("GET", ("" + str("/api/users/stream") + "?telegramId=" + str(vars["telegramId"]) + "&size=" + str(vars["size"]) + ""))
+	telegramID := arg(args, 0, undef)
+	size := arg(args, 1, 25)
+	path := "/api/users/stream?telegramId=" + str(telegramID) + "&size=" + str(size)
+	if cursor, _ := arg(args, 2, undef).(int64); cursor > 0 {
+		path += "&cursor=" + str(cursor)
+	}
+	return e.request("GET", path)
 }
 
 func (e *executor) getUserAccessibleNodes(args ...any) any {
@@ -1054,10 +1056,8 @@ func (e *executor) executeNodePlugin(args ...any) any {
 	return e.request("POST", "/api/node-plugins/executor", vars["params"])
 }
 
-func (e *executor) getTorrentBlockerReports(args ...any) any {
-	vars := object{}
-	_ = vars
-	return e.request("GET", "/api/node-plugins/torrent-blocker")
+func (e *executor) getTorrentBlockerReports() any {
+	return e.request("GET", torrentBlockerReportsPath)
 }
 
 func (e *executor) getTorrentBlockerStats(args ...any) any {

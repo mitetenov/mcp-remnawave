@@ -81,7 +81,7 @@ func TestHTTPProtocolEras(t *testing.T) {
 			t.Fatal("legacy public caching metadata")
 		}
 		tools := out["tools"].([]any)
-		if len(tools) != 17 {
+		if len(tools) != 18 {
 			t.Fatal(len(tools))
 		}
 	}
